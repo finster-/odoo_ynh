@@ -25,8 +25,7 @@ sudo yunohost app setting $app domain -v $domain
 # Install Odoo
 	# Install postgresql and create user
 		sudo apt-get install postgresql -y
-		sudo sed -i s/"#listen_addresses = 'localhost'"/"listen_addresses = '*'"/g /etc/postgresql/9.3/main/postgresql.conf
-		sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
+		sudo su - postgres -c "createuser -s odoo" 2> /dev/null || true
 	
 	# Install Odoo dependencies
 		sudo apt-get install python-dateutil python-feedparser python-ldap python-libxslt1 python-lxml python-mako python-openid python-psycopg2 python-pybabel python-pychart python-pydot python-pyparsing python-reportlab python-simplejson python-tz python-vatnumber python-vobject python-webdav python-werkzeug python-xlwt python-yaml python-zsi python-docutils python-psutil python-mock python-unittest2 python-jinja2 python-pypdf python-decorator python-requests git-core python-passlib -y
