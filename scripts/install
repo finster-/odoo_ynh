@@ -36,9 +36,11 @@ sudo yunohost app setting $app domain -v $domain
 		sudo apt-get -y install wkhtmltopdf
 		sudo apt-get -y install odoo
 	
-	# Copy conf file
-		sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/odoo-server.conf
-		sudo cp ../conf/odoo-server.conf /etc/odoo-server.conf
+	# Set admin password
+		sudo sed -i "s@admin_passwd = admin@admin_passwd = $admin_password@g" /etc/odoo/openerp-server.conf
+		
+	# Setup LDAP
+		sudo sed -i "s@'auto_install': False@'auto_install': True@g" /usr/lib/python2.7/dist-packages/openerp/addons/auth_ldap/__openerp__.py
 		
 	# Add services
 		sudo yunohost service add postgresql
