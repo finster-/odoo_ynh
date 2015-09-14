@@ -23,7 +23,7 @@ sudo yunohost app setting $app domain -v $domain
 
 # Install Odoo
 	# Prepare installation
-		sudo apt-get -y install curl
+		sudo apt-get -y -qq install curl
 	
 	# Install Odoo
 		sudo curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
@@ -33,9 +33,12 @@ sudo yunohost app setting $app domain -v $domain
 			sudo sh -c 'echo "deb http://nightly.odoo.com/9.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
 		fi
 		sudo apt-get update
-		sudo apt-get -y install wkhtmltopdf
-		sudo apt-get -y install odoo
-		su - postgres -c "createuser -s odoo" 2> /dev/null || true
+		
+		# Initialize installation
+		sudo apt-get -y -qq install postgresql
+		su - postgres -c "createuser -s odoo" 2> /dev/null || true 
+		
+		sudo apt-get -y -qq install odoo
 	
 	# Set admin password
 		sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/openerp-server.conf
@@ -50,6 +53,9 @@ sudo yunohost app setting $app domain -v $domain
 		sudo yunohost service add odoo
 		sudo yunohost service stop odoo
 		sudo yunohost service start odoo
+	
+	# Install wkhtmltopdf to print PDF reports
+		sudo apt-get -y -qq install wkhtmltopdf
 	
 # Configure Nginx and reload
 	sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
