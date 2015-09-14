@@ -37,7 +37,7 @@ sudo yunohost app setting $app domain -v $domain
 		sudo apt-get -y install odoo
 	
 	# Set admin password
-		sudo sed -i "s@admin_passwd = admin@admin_passwd = $admin_password@g" ../conf/openerp-server.conf
+		sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/openerp-server.conf
 		sudo cp ../conf/openerp-server.conf /etc/odoo/openerp-server.conf
 		sudo chown odoo:odoo /etc/odoo/openerp-server.conf
 		

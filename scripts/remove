@@ -2,8 +2,8 @@
 app=odoo
 
 # Remove Odoo
-	sudo apt-get remove odoo
-	sudo apt-get remove wkhtmltopdf
+	sudo apt-get remove odoo -y
+	sudo apt-get remove wkhtmltopdf -y
 	sudo yunohost service remove odoo
 
 # Remove NGINX conf
