@@ -1,5 +1,5 @@
 #!/bin/bash
-app=docker
+app=odoo
 set -e
 
 # Retrieve arguments
