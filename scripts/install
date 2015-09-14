@@ -37,7 +37,9 @@ sudo yunohost app setting $app domain -v $domain
 		sudo apt-get -y install odoo
 	
 	# Set admin password
-		sudo sed -i "s@admin_passwd = admin@admin_passwd = $admin_password@g" /etc/odoo/openerp-server.conf
+		sudo sed -i "s@admin_passwd = admin@admin_passwd = $admin_password@g" ../conf/openerp-server.conf
+		sudo cp ../conf/openerp-server.conf /etc/odoo/openerp-server.conf
+		sudo chown odoo:odoo /etc/odoo/openerp-server.conf
 		
 	# Setup LDAP
 		sudo sed -i "s@'auto_install': False@'auto_install': True@g" /usr/lib/python2.7/dist-packages/openerp/addons/auth_ldap/__openerp__.py
