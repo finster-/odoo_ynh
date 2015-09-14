@@ -1,0 +1,13 @@
+#!/bin/bash
+
+app=docker
+
+# TO BE DONE
+
+# Remove NGINX conf
+	domain=$(sudo yunohost app setting $app domain)
+	sudo rm /etc/nginx/conf.d/$domain.d/$app.conf
+
+# Reload
+	sudo service nginx reload
+	sudo yunohost app ssowatconf 

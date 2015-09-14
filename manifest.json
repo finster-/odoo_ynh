@@ -1,0 +1,50 @@
+{
+    "name": "Odoo",
+    "id": "odoo",
+    "description": {
+        "en": "Odoo is a suite of business apps (ERP: CRM, Accounting, Point of Sale, HR, Purchases...).",
+        "fr": "Odoo est une collection d'apps de gestion d'entreprise (ERP : CRM, Comptabilité, Point de Vente, RH, Achats, ...)."
+    },
+    "developer": {
+        "name": "scith"
+    },
+    "multi_instance": "false",
+    "arguments": {
+        "install" : [
+            {
+                "name": "domain",
+                "type": "domain",
+                "ask": {
+                    "en": "Choose a domain for Odoo (Odoo will be installed on its root!)",
+                    "fr": "Choisissez un domaine pour Odoo (Odoo sera installé dans sa racine !)"
+                },
+                "example": "odoo.domain.org"
+            },
+            {
+                "name": "is_public",
+                "ask": {
+                    "en": "Is it a public instance of Odoo? (Note: you can NOT run a public e-commerce website with Odoo in a private instance)",
+					"fr": "Est-ce une instance publique d'Odoo ? (Note : vous ne pouvez PAS utiliser Odoo comme site e-commerce dans une instance privée)"
+                },
+                "choices": ["Yes", "No"],
+                "default": "Yes"
+            },
+			{
+                "name": "odoo_version",
+                "ask": {
+                    "en": "Which version of Odoo do you want to install?",
+					"fr": "Quelle version d'Odoo souhaitez-vous installer ?"
+                },
+                "choices": ["8.0", "9.0"],
+                "default": "8.0"
+            },
+			{
+                "name": "admin_password",
+                "ask": {
+                    "en": "Choose a strong master admin password",
+					"fr": "Choisissez un mot de passe maître fort pour l'administration"
+                }
+            }
+        ]
+    }
+}

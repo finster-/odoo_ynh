@@ -1,0 +1,76 @@
+#!/bin/bash
+app=docker
+set -e
+
+# Retrieve arguments
+domain=$1
+is_public=$2
+odoo_version=$3
+admin_password=$4
+
+sudo yunohost app checkport 8069
+if [[ ! $? -eq 0 ]]; then
+  exit 1
+fi
+
+# Check domain/path availability
+domain=${domain}"/"
+sudo yunohost app checkurl $domain -a $app \
+	|| (echo "Path not available: $domain" && exit 1)
+
+# Remove trailing "/" for next commands
+domain=${domain%/}
+sudo yunohost app setting $app domain -v $domain
+
+# Install Odoo
+	# Install postgresql and create user
+		sudo apt-get install postgresql -y
+		sudo sed -i s/"#listen_addresses = 'localhost'"/"listen_addresses = '*'"/g /etc/postgresql/9.3/main/postgresql.conf
+		sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
+	
+	# Install Odoo dependencies
+		sudo apt-get install python-dateutil python-feedparser python-ldap python-libxslt1 python-lxml python-mako python-openid python-psycopg2 python-pybabel python-pychart python-pydot python-pyparsing python-reportlab python-simplejson python-tz python-vatnumber python-vobject python-webdav python-werkzeug python-xlwt python-yaml python-zsi python-docutils python-psutil python-mock python-unittest2 python-jinja2 python-pypdf python-decorator python-requests git-core python-passlib -y
+		sudo pip install gdata
+	
+	# Install wkhtopdf to print PDF reports
+		wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
+		sudo dpkg -i http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
+		sudo apt-get install -y xfonts-75dpi
+		sudo cp /usr/local/bin/wkhtmltopdf /usr/bin
+		sudo cp /usr/local/bin/wkhtmltoimage /usr/bin
+
+	# Create odoo user
+		sudo adduser --system --quiet --shell=/bin/bash --home=/home/odoo --gecos 'ODOO' --group odoo
+		
+	# Install Odoo
+		sudo git clone --branch $odoo_version https://www.github.com/odoo/odoo /opt/odoo/
+		sudo chown -R odoo:odoo /opt/odoo
+		
+	# Create log file
+		sudo mkdir /var/log/odoo
+		sudo chown -R odoo:odoo /var/log/odoo
+	
+	# Create conf file
+		sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/odoo-server.conf
+		sudo cp ../conf/odoo-server.conf /etc/odoo-server.conf
+		sudo chown odoo:odoo /etc/odoo-server.conf
+		
+	# Systemd and services
+	#	if [ -d /run/systemd/system ]; then
+	#		sudo systemctl enable postgresql.service
+	#		sudo cp ../conf/systemd.service /etc/systemd/system/odoo.service
+	#		sudo systemctl enable odoo.service
+	#	fi
+	#	sudo yunohost service add postgresql
+	#	sudo yunohost service add odoo
+	
+# Configure Nginx and reload
+sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
+
+if [ "$is_public" = "Yes" ];
+then
+	sudo yunohost app setting $app skipped_uris -v "/"
+fi
+
+sudo service nginx reload
+echo $?
