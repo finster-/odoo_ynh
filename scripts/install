@@ -27,7 +27,12 @@ sudo yunohost app setting $app domain -v $domain
 	
 	# Install Odoo
 		sudo curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
-		sudo sh -c 'echo "deb http://nightly.odoo.com/${odoo_version}/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
+		if [ "$odoo_version" = "8.0" ]
+		then
+			sudo sh -c 'echo "deb http://nightly.odoo.com/8.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
+		elif [ "$odoo_version" = "9.0" ]
+			sudo sh -c 'echo "deb http://nightly.odoo.com/9.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
+		fi
 		sudo apt-get update
 		sudo apt-get -y install wkhtmltopdf
 		sudo apt-get -y install odoo
