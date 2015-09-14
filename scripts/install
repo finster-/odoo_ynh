@@ -27,10 +27,11 @@ sudo yunohost app setting $app domain -v $domain
 	
 	# Install Odoo
 		sudo curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
-		if [ "$odoo_version" = "8.0" ]
+		if [ "$odoo_version" = "8.0" ];
 		then
 			sudo sh -c 'echo "deb http://nightly.odoo.com/8.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
-		elif [ "$odoo_version" = "9.0" ]
+		elif [ "$odoo_version" = "9.0" ];
+		then
 			sudo sh -c 'echo "deb http://nightly.odoo.com/9.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
 		fi
 		sudo apt-get update
