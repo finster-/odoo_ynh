@@ -40,6 +40,9 @@ sudo yunohost app setting $app domain -v $domain
 		
 		sudo apt-get -y -qq install odoo
 	
+	# Install wkhtmltopdf to print PDF reports
+		sudo apt-get -y -qq install wkhtmltopdf
+		
 	# Set admin password
 		sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/openerp-server.conf
 		sudo cp ../conf/openerp-server.conf /etc/odoo/openerp-server.conf
@@ -53,10 +56,7 @@ sudo yunohost app setting $app domain -v $domain
 		sudo yunohost service add odoo
 		sudo yunohost service stop odoo
 		sudo yunohost service start odoo
-	
-	# Install wkhtmltopdf to print PDF reports
-		sudo apt-get -y -qq install wkhtmltopdf
-	
+
 # Configure Nginx and reload
 	sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
 
