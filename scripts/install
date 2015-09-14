@@ -4,9 +4,8 @@ set -e
 
 # Retrieve arguments
 domain=$1
-is_public=$2
-odoo_version=$3
-admin_password=$4
+odoo_version=$2
+admin_password=$3
 
 sudo yunohost app checkport 8069
 if [[ ! $? -eq 0 ]]; then
@@ -44,12 +43,10 @@ sudo yunohost app setting $app domain -v $domain
 		sudo yunohost service start odoo
 	
 # Configure Nginx and reload
-sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
+	sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
 
-if [ "$is_public" = "Yes" ];
-then
+# Make Odoo public
 	sudo yunohost app setting $app skipped_uris -v "/"
-fi
 
 sudo service nginx reload
 echo $?

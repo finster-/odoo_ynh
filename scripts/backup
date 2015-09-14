@@ -1,5 +1,3 @@
 #! /bin/bash
-app=docker
-set -e
-
+app=odoo
 # TO BE DONE

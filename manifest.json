@@ -20,15 +20,6 @@
                 },
                 "example": "odoo.domain.org"
             },
-            {
-                "name": "is_public",
-                "ask": {
-                    "en": "Is it a public instance of Odoo? (Note: you can NOT run a public e-commerce website with Odoo in a private instance)",
-					"fr": "Est-ce une instance publique d'Odoo ? (Note : vous ne pouvez PAS utiliser Odoo comme site e-commerce dans une instance privée)"
-                },
-                "choices": ["Yes", "No"],
-                "default": "Yes"
-            },
 			{
                 "name": "odoo_version",
                 "ask": {

@@ -1,8 +1,10 @@
 #!/bin/bash
+app=odoo
 
-app=docker
-
-# TO BE DONE
+# Remove Odoo
+	sudo apt-get remove odoo
+	sudo apt-get remove wkhtmltopdf
+	sudo yunohost service remove odoo
 
 # Remove NGINX conf
 	domain=$(sudo yunohost app setting $app domain)
