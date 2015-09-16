@@ -1,4 +1,4 @@
 #!/usr/bin/python
 import oerplib
 oerp = oerplib.OERP(server='localhost', protocol='xmlrpc', port=8069)
-oer.db.create_database('ADMIN_PASSWORD', 'DOMAIN_DATABASE', False, 'DATABASE_LANG', 'DATABASE_PASSWORD')
+oerp.db.create_database('ADMIN_PASSWORD', 'DOMAIN_DATABASE', False, 'DATABASE_LANG', 'DATABASE_PASSWORD')
