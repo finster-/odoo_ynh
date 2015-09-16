@@ -18,9 +18,6 @@ What does not work
 
 Configuration
 -------------
-**Database**
-- Create a database named "**subdomain-domain-ltd**" (for example "erp-test-com" if you access via erp.test.com)
-
 **Setup LDAP**
 - Create a user named "template" with email "template". This user will give its permissions by default to YunoHost users so you can also give it appropriate permissions.
 - In "Edit Company Data" (on the logo), go to "Configuration" and add a LDAP setting

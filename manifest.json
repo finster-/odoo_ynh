@@ -35,6 +35,22 @@
                     "en": "Choose a strong master admin password",
 					"fr": "Choisissez un mot de passe maître fort pour l'administration"
                 }
+            },
+			{
+                "name": "database_password",
+                "ask": {
+                    "en": "Choose a password for the 'admin' account on Odoo",
+					"fr": "Choisissez un mot de passe pour le compte 'admin' d'Odoo"
+                }
+            },
+			{
+                "name": "database_lang",
+                "ask": {
+                    "en": "Choose a language for Odoo",
+					"fr": "Choisissez une langue pour Odoo"
+                },
+                "choices": ["en_US", "fr_FR", "de_DE"],
+                "default": "en_US"
             }
         ]
     }
