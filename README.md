@@ -28,9 +28,17 @@ Configuration
 - Template user: template
 - Save
 
-**Backup and Restore via Odoo**
+**Backup via Odoo**
 - In YunoHost, open the port 8069
-- Access Odoo via your server's IP or URL via *:8069* at the end. You can now backup and restore via the web interface
+- Access Odoo via your server's IP or URL via *:8069* at the end
+- Go to manage databases and backup
+
+**Restore via Odoo**
+- In YunoHost, open the port 8069 (if you haven't opened it already)
+- Access Odoo via your server's IP or URL via *:8069* at the end
+- Go to manage databases and delete the old database
+- Restore
+- **Important!** The database must be named "*subdomain-domain-tld*" (for example *erp-test-com* if you access the database via *erp.test.com*
 
 
 Odoo
