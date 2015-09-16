@@ -1,13 +1,22 @@
 #!/bin/bash
 app=odoo
+domain=$(sudo yunohost app setting $app domain)
+instance=$(sudo yunohost app setting $app instance)
 
-# Remove Odoo
-	sudo apt-get remove odoo -y
-	sudo apt-get remove wkhtmltopdf -y
-	sudo yunohost service remove odoo
-
+# If removing master instance, remove Odoo. Else, remove database only
+	if [ "$instance" = "master" ]; then
+		# Remove Odoo
+			sudo yunohost service stop odoo
+			sudo yunohost service stop postgresql
+			sudo apt-get remove odoo -y
+			sudo apt-get remove wkhtmltopdf -y
+			sudo yunohost service remove odoo
+			sudo yunohost service remove postgresql
+	else
+		# Remove database: TO BE DONE
+	fi
+	
 # Remove NGINX conf
-	domain=$(sudo yunohost app setting $app domain)
 	sudo rm /etc/nginx/conf.d/$domain.d/$app.conf
 
 # Reload

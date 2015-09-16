@@ -12,7 +12,7 @@ https://example.com/odoo/ will NOT work
 
 What does not work
 ------------------
-- Backup and restore
+- Backup and restore via YunoHost
 - Automatic database creation
 - Automatic LDAP configuration
 
@@ -30,6 +30,10 @@ Configuration
 - LDAP filter: uid=%s
 - Template user: template
 - Save
+
+**Backup and Restore via Odoo**
+- In YunoHost, open the port 8069
+- Access Odoo via your server's IP or URL via *:8069* at the end. You can now backup and restore via the web interface
 
 
 Odoo

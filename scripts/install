@@ -7,10 +7,6 @@ domain=$1
 odoo_version=$2
 admin_password=$3
 
-sudo yunohost app checkport 8069
-if [[ ! $? -eq 0 ]]; then
-  exit 1
-fi
 
 # Check domain/path availability
 domain=${domain}"/"
@@ -21,7 +17,20 @@ sudo yunohost app checkurl $domain -a $app \
 domain=${domain%/}
 sudo yunohost app setting $app domain -v $domain
 
-# Install Odoo
+if [ -f /usr/bin/openerp-server ]; then
+	echo "Odoo is already installed, switching to multi-instances"
+	sudo yunohost app setting $app instance -v "slave"
+	
+else
+	sudo yunohost app checkport 8069
+	if [[ ! $? -eq 0 ]]; then
+	  exit 1
+	fi
+	
+	echo "Installing odoo"
+	sudo yunohost app setting $app version -v $odoo_version
+	sudo yunohost app setting $app instance -v "master"
+	# Install Odoo
 	# Prepare installation
 		sudo apt-get -y -qq install curl
 	
@@ -56,6 +65,10 @@ sudo yunohost app setting $app domain -v $domain
 		sudo yunohost service add odoo
 		sudo yunohost service stop odoo
 		sudo yunohost service start odoo
+fi
+
+# Setup database: TO BE DONE
+# Setup LDAP: TO BE DONE
 
 # Configure Nginx and reload
 	sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
