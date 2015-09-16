@@ -3,7 +3,10 @@ app=odoo
 domain=$(sudo yunohost app setting $app domain)
 instance=$(sudo yunohost app setting $app instance)
 
-# If removing master instance, remove Odoo. Else, remove database only
+# Remove database
+	sudo -u postgres dropdb ${domain//./-}
+
+# If removing master instance, remove Odoo.
 	if [ "$instance" = "master" ]; then
 		# Remove Odoo
 			sudo yunohost service stop odoo
@@ -12,8 +15,6 @@ instance=$(sudo yunohost app setting $app instance)
 			sudo apt-get remove wkhtmltopdf -y
 			sudo yunohost service remove odoo
 			sudo yunohost service remove postgresql
-	else
-		# Remove database: TO BE DONE
 	fi
 	
 # Remove NGINX conf
