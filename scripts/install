@@ -62,7 +62,7 @@ else
 		sudo sed -i "s@'auto_install': False@'auto_install': True@g" /usr/lib/python2.7/dist-packages/openerp/addons/auth_ldap/__openerp__.py
 		
 	# Install oerplib to manage databases
-		pip install oerplib
+		sudo pip install oerplib
 		
 	# Add services
 		sudo yunohost service add postgresql
@@ -76,7 +76,7 @@ fi
 	sudo sed -i "s@DOMAIN_DATABASE@${domain//./-}@g" ../conf/install_database.py
 	sudo sed -i "s@DATABASE_LANG@$database_lang@g" ../conf/install_database.py
 	sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/install_database.py
-	python ../conf/install_database.py
+	sudo python ../conf/install_database.py
 
 # Setup LDAP: TO BE DONE
 
