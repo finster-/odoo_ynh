@@ -12,9 +12,17 @@ https://example.com/odoo/ will NOT work
 
 What does not work
 ------------------
+- Backup and restore via Odoo (works with a trick shared on the Github)
 - Backup and restore via YunoHost
-- Automatic database creation
 - Automatic LDAP configuration
+
+Still to do
+-----------
+- Automatic LDAP setup + emails
+- Backup/restore via Odoo fix
+- Backup/restore via YunoHost
+- SMTP settings
+
 
 Configuration
 -------------
