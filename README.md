@@ -22,6 +22,7 @@ https://example.com/odoo/ will NOT work
 
 What does not work
 ------------------
+- Automatic database creation (experimental)
 - Backup and restore via Odoo (works with a trick shared on the Github)
 - Backup and restore via YunoHost
 - Automatic LDAP configuration
