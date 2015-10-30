@@ -10,11 +10,9 @@ instance=$(sudo yunohost app setting $app instance)
 	if [ "$instance" = "master" ]; then
 		# Remove Odoo
 			sudo yunohost service stop odoo
-			sudo yunohost service stop postgresql
 			sudo apt-get remove odoo -y
 			sudo apt-get remove wkhtmltopdf -y
 			sudo yunohost service remove odoo
-			sudo yunohost service remove postgresql
 	fi
 	
 # Remove NGINX conf
