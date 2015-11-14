@@ -51,8 +51,13 @@ else
 		sudo apt-get -y -qq install odoo
 	
 	# Install wkhtmltopdf to print PDF reports
-		sudo wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
-		sudo dpkg -i wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
+		if [ $(uname -m) == 'x86_64' ]; then
+			sudo wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
+			sudo dpkg -i wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
+		else
+			sudo wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-jessie-i386.deb
+			sudo dpkg -i wkhtmltox-0.12.2.1_linux-jessie-i386.deb	
+		fi
 		sudo cp /usr/local/bin/wkhtmltopdf /usr/bin
 		sudo cp /usr/local/bin/wkhtmltoimage /usr/bin
 		
