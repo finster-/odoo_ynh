@@ -48,7 +48,8 @@ else
 		
 		# Initialize installation
 		sudo apt-get -y -qq install postgresql
-		sudo su - postgres -c "createuser -s odoo" 2> /dev/null || true 
+		sudo su - postgres -c "echo \"CREATE USER odoo WITH PASSWORD '$admin_password';\" | psql" 2> /dev/null || true 
+		sudo su - postgres -c "echo \"ALTER ROLE odoo WITH CREATEDB;\" | psql" 2> /dev/null || true 
 		
 		sudo apt-get -y -qq install odoo
 	
