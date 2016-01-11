@@ -9,6 +9,8 @@ admin_password=$3
 database_password=$4
 database_lang=$5
 
+
+
 # Check domain/path availability
 domain=${domain}"/"
 sudo yunohost app checkurl $domain -a $app \
@@ -46,16 +48,12 @@ else
 		
 		# Initialize installation
 		sudo apt-get -y -qq install postgresql
-		su - postgres -c "createuser -s odoo" 2> /dev/null || true 
+		sudo su - postgres -c "echo \"CREATE USER odoo WITH PASSWORD '$admin_password' CREATEDB;\" | psql" 2> /dev/null || true 
 		
 		sudo apt-get -y -qq install odoo
 	
 	# Install wkhtmltopdf to print PDF reports
-		sudo wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
-		sudo dpkg -i wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
-		sudo apt-get -y -qq install xfonts-75dpi
-		sudo cp /usr/local/bin/wkhtmltopdf /usr/bin
-		sudo cp /usr/local/bin/wkhtmltoimage /usr/bin
+		sudo apt-get -yf -qq install wkhtmltopdf
 		
 	# Set admin password
 		sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/openerp-server.conf
@@ -66,7 +64,7 @@ else
 		sudo sed -i "s@'auto_install': False@'auto_install': True@g" /usr/lib/python2.7/dist-packages/openerp/addons/auth_ldap/__openerp__.py
 		
 	# Install oerplib to manage databases
-		sudo pip install oerplib
+		#sudo pip install oerplib
 		
 	# Add services
 		sudo yunohost service add postgresql
@@ -75,12 +73,21 @@ else
 		sudo yunohost service start odoo
 fi
 
-# Setup database
-	sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/install_database.py
-	sudo sed -i "s@DOMAIN_DATABASE@${domain//./-}@g" ../conf/install_database.py
-	sudo sed -i "s@DATABASE_LANG@$database_lang@g" ../conf/install_database.py
-	sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/install_database.py
-	sudo python ../conf/install_database.py
+function exit_properly
+{
+    set +e
+    # TODO: uninstall db
+    sudo rm -f /etc/nginx/conf.d/$domain.d/$app.conf
+    sudo service nginx reload
+    exit 1
+}
+trap exit_properly ERR
+# Setup database: not working
+#sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/install_database.py
+#sudo sed -i "s@DOMAIN_DATABASE@${domain//./-}@g" ../conf/install_database.py
+#sudo sed -i "s@DATABASE_LANG@$database_lang@g" ../conf/install_database.py
+#sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/install_database.py
+#sudo python ../conf/install_database.py
 
 # Setup LDAP: TO BE DONE
 
