@@ -68,7 +68,7 @@ else
 		
 	# Add services
 		sudo yunohost service add postgresql
-		sudo yunohost service add odoo
+		sudo yunohost service add odoo --log /var/log/odoo/odoo-server.log
 		sudo yunohost service stop odoo
 		sudo yunohost service start odoo
 fi
