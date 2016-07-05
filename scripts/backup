@@ -1,3 +1,24 @@
 #! /bin/bash
-app=odoo
-# TO BE DONE
+
+# Exit on command errors and treat unset variables as an error
+set -eu
+
+# See comments in install script
+app=$YNH_APP_INSTANCE_NAME
+
+# Source YunoHost helpers
+. /usr/share/yunohost/helpers
+
+# Backup sources & data
+ynh_backup "/usr/lib/python2.7/dist-packages/openerp/" "sources"
+
+# Copy NGINX configuration
+domain=$(ynh_app_setting_get "$app" domain)
+ynh_backup "/etc/nginx/conf.d/${domain}.d/${app}.conf" "nginx.conf"
+ynh_backup "/etc/odoo/openerp-server.conf" "openerp-server.conf"
+
+# Copy database
+database=${domain//./-}
+sudo su -c "pg_dump $database" postgres > ./dump.sql
+pwd=`pwd`
+ynh_backup "$pwd/dump.sql" "dump.sql"

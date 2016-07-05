@@ -1,6 +1,7 @@
 {
     "name": "Odoo",
     "id": "odoo",
+    "packaging_format": 1,
     "description": {
         "en": "Odoo is a suite of business apps (ERP: CRM, Accounting, Point of Sale, HR, Purchases...).",
         "fr": "Odoo est une collection d'apps de gestion d'entreprise (ERP : CRM, Comptabilité, Point de Vente, RH, Achats, ...)."
@@ -8,7 +9,13 @@
     "developer": {
         "name": "scith"
     },
+    "requirements": {
+        "yunohost": ">> 2.4.0"
+    },
     "multi_instance": "true",
+    "services": [
+        "nginx"
+    ],
     "arguments": {
         "install" : [
             {
@@ -44,7 +51,7 @@
                 }
             },
 			{
-                "name": "database_lang",
+                "name": "lang",
                 "ask": {
                     "en": "Choose a language for Odoo",
 					"fr": "Choisissez une langue pour Odoo"
