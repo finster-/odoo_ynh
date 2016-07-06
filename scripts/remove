@@ -1,24 +1,31 @@
 #!/bin/bash
-app=odoo
-domain=$(sudo yunohost app setting $app domain)
+set -eu
+
+app=$YNH_APP_INSTANCE_NAME
+# Source YunoHost helpers
+. /usr/share/yunohost/helpers
+
+# Retrieve app settings
+domain=$(ynh_app_setting_get "$app" domain)
+
 database=${domain//./-}
-instance=$(sudo yunohost app setting $app instance)
+instance=$(ynh_app_setting_get "$app" instance)
 
 # Remove database
-	sudo -u postgres dropdb $database
+sudo su -c "dropdb $database" postgres 
 
 # If removing master instance, remove Odoo.
-	if [ "$instance" = "master" ]; then
-		# Remove Odoo
-			sudo yunohost service stop odoo
-			sudo apt-get remove odoo -y
-			sudo apt-get remove wkhtmltopdf -y
-			sudo yunohost service remove odoo
-	fi
-	
+if [ "$instance" = "master" ]; then
+	# Remove Odoo
+		sudo yunohost service stop odoo
+		sudo apt-get remove odoo -y
+		sudo apt-get remove wkhtmltopdf -y
+		sudo yunohost service remove odoo
+fi
+
 # Remove NGINX conf
-	sudo rm /etc/nginx/conf.d/$domain.d/$app.conf
+sudo rm /etc/nginx/conf.d/$domain.d/$app.conf
 
 # Reload
-	sudo service nginx reload
-	sudo yunohost app ssowatconf 
+sudo service nginx reload
+sudo yunohost app ssowatconf
