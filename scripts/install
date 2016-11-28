@@ -29,7 +29,7 @@ is_master=false
 # Exit to allow host change in my trap function
 function exit_without_linter_warning
 {
-    ynh_die $1 $2
+    ynh_die "$1" $2
 }
 
 function exit_properly
@@ -126,7 +126,7 @@ ynh_psql_create_db() {
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
 
 # Make Odoo public
-ynh_app_setting_set $app skipped_uris -v "/"
+ynh_app_setting_set "$app" skipped_uris "/"
 
 sudo service nginx reload
 
