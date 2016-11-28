@@ -6,13 +6,16 @@
         "en": "Odoo is a suite of business apps (ERP: CRM, Accounting, Point of Sale, HR, Purchases...).",
         "fr": "Odoo est une collection d'apps de gestion d'entreprise (ERP : CRM, Comptabilité, Point de Vente, RH, Achats, ...)."
     },
-    "developer": {
-        "name": "scith"
+    "maintainer": {
+        "name": "scith, ljf",
+        "email": "ljf+yunohost@grimaud.me"
     },
+    "url":"https://www.odoo.com",
+    "license":"free",
     "requirements": {
         "yunohost": ">= 2.4.0"
     },
-    "multi_instance": "true",
+    "multi_instance": true,
     "services": [
         "nginx"
     ],

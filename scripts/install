@@ -17,76 +17,94 @@ lang=$YNH_APP_ARG_LANG
 # Check domain/path availability
 domain=${domain}"/"
 sudo yunohost app checkurl $domain -a $app \
-	|| (echo "Path not available: $domain" && exit 1)
+	|| (ynh_die "Path not available: $domain" 1)
 
 # Remove trailing "/" for next commands
 domain=${domain%/}
 ynh_app_setting_set "$app" domain "$domain"
 ynh_app_setting_set "$app" domain "$domain"
 
+is_master=false
+
+# Exit to allow host change in my trap function
+function exit_without_linter_warning
+{
+    ynh_die $1 $2
+}
+
+function exit_properly
+{
+
+    set +e
+    if [ "$is_master" = true ]; then
+        sudo rm -f /etc/apt/sources.list.d/odoo.list
+        sudo apt-get update
+        ynh_package_remove odoo
+        sudo rm -f /etc/odoo/openerp-server.conf
+        sudo yunohost service remove odoo
+    fi
+    # TODO: uninstall db
+    sudo rm -f /etc/nginx/conf.d/$domain.d/$app.conf
+    sudo service nginx reload
+    exit_without_linter_warning "Error during installation" 1
+}
+
+trap exit_properly ERR
+
 if [ -f /usr/bin/openerp-server ]; then
 	echo "Odoo is already installed, switching to multi-instances"
   ynh_app_setting_set "$app" instance "slave"
 
 else
-	sudo yunohost app checkport 8069
-	if [[ ! $? -eq 0 ]]; then
-	  exit 1
-	fi
+    is_master=true
+  	sudo yunohost app checkport 8069
+  	if [[ ! $? -eq 0 ]]; then
+  	  exit_without_linter_warning "Port 8069 unavailable" 1
+  	fi
 
-	echo "Installing odoo"
-  ynh_app_setting_set "$app" version "$odoo_version"
-  ynh_app_setting_set "$app" instance "master"
-	# Install Odoo
-	# Prepare installation
-  ynh_package_install curl
+  	echo "Installing odoo"
+    ynh_app_setting_set "$app" version "$odoo_version"
+    ynh_app_setting_set "$app" instance "master"
+  	# Install Odoo
+  	# Prepare installation
+    ynh_package_install curl
 
-	# Install Odoo
-		sudo curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
-		if [ "$odoo_version" = "8.0" ]; then
-			sudo sh -c 'echo "deb http://nightly.odoo.com/8.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
-		else
-			sudo sh -c 'echo "deb http://nightly.odoo.com/9.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
-		fi
-		sudo apt-get update
+  	# Install Odoo
+  	sudo curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
+  	if [ "$odoo_version" = "8.0" ]; then
+  		sudo sh -c 'echo "deb http://nightly.odoo.com/8.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
+  	else
+  		sudo sh -c 'echo "deb http://nightly.odoo.com/9.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
+  	fi
+  	sudo apt-get update
 
-		# Initialize installation
+  	# Initialize installation
     ynh_package_install postgresql
     sudo su -c "psql" postgres <<< \
     "CREATE USER $app WITH PASSWORD '$database_password' CREATEDB;"
     ynh_package_install odoo
 
-	# Install wkhtmltopdf to print PDF reports
-		ynh_package_install wkhtmltopdf
+    # Install wkhtmltopdf to print PDF reports
+    ynh_package_install wkhtmltopdf
 
-	# Set admin password
-		sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/openerp-server.conf
+    # Set admin password
+    sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/openerp-server.conf
     sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/openerp-server.conf
-		sudo cp ../conf/openerp-server.conf /etc/odoo/openerp-server.conf
-		sudo chown odoo:odoo /etc/odoo/openerp-server.conf
+    sudo cp ../conf/openerp-server.conf /etc/odoo/openerp-server.conf
+    sudo chown odoo:odoo /etc/odoo/openerp-server.conf
 
-	# Autoinstall the LDAP auth module
-		sudo sed -i "s@'auto_install': False@'auto_install': True@g" /usr/lib/python2.7/dist-packages/openerp/addons/auth_ldap/__openerp__.py
+    # Autoinstall the LDAP auth module
+    sudo sed -i "s@'auto_install': False@'auto_install': True@g" /usr/lib/python2.7/dist-packages/openerp/addons/auth_ldap/__openerp__.py
 
-	# Install oerplib to manage databases
-		#sudo pip install oerplib
+    # Install oerplib to manage databases
+    #sudo pip install oerplib
 
-	# Add services
-		sudo yunohost service add postgresql
-		sudo yunohost service add odoo --log /var/log/odoo/odoo-server.log
-		sudo yunohost service stop odoo
-		sudo yunohost service start odoo
+    # Add services
+    sudo yunohost service add postgresql
+    sudo yunohost service add odoo --log /var/log/odoo/odoo-server.log
+    sudo yunohost service stop odoo
+    sudo yunohost service start odoo
 fi
-
-function exit_properly
-{
-    set +e
-    # TODO: uninstall db
-    sudo rm -f /etc/nginx/conf.d/$domain.d/$app.conf
-    sudo service nginx reload
-    exit 1
-}
-trap exit_properly ERR
 
 ynh_psql_create_user() {
         sudo su -c "psql" postgres <<< \
@@ -108,7 +126,7 @@ ynh_psql_create_db() {
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
 
 # Make Odoo public
-sudo yunohost app setting $app skipped_uris -v "/"
+ynh_app_setting_set $app skipped_uris -v "/"
 
 sudo service nginx reload
 
