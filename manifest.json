@@ -40,7 +40,7 @@
                 "default": "8.0"
             },
 			{
-                "name": "admin_password",,
+                "name": "admin_password",
                 "type": "password",
                 "ask": {
                     "en": "Choose a strong master admin password",
