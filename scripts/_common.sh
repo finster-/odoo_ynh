@@ -73,13 +73,13 @@ extract_sources() {
   local AS_USER=${2:-admin}
 
   # retrieve and extract Roundcube tarball
-  tarball="/tmp/${APPNAME}.tar.gz"
+  tarball="/tmp/${APPNAME}.tar.xz"
   rm -f "$tarball"
   wget -q -O "$tarball" "$SOURCE_URL" \
     || ynh_die "Unable to download tarball"
   echo "$SOURCE_SHA256 $tarball" | sha256sum -c >/dev/null \
     || ynh_die "Invalid checksum of downloaded tarball"
-  exec_as "$AS_USER" tar xzf "$tarball" -C "$DESTDIR" --strip-components 1 \
+  exec_as "$AS_USER" tar xJf "$tarball" -C "$DESTDIR" --strip-components 1 \
     || ynh_die "Unable to extract tarball"
   rm -f "$tarball"
 
