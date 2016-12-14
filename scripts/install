@@ -120,13 +120,15 @@ sudo service postgresql reload
 database=${domain//./-}
 
 # Load translation
+sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf --stop-after-init -d $database
 sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf --stop-after-init -d $database --load-language $lang
-
 # Configure language, timezone and ldap
-sudo /usr/bin/openerp-server shell -c /etc/odoo/openerp-server.conf --stop-after-init -d $database <<< \
+sudo /usr/bin/openerp-server shell -c /etc/odoo/openerp-server.conf -d $database <<< \
 "
 self.change_password('admin','$admin_password')
+self.env.cr.commit()
 self.write({'tz':'$tz','lang':'$lang'})
+self.env.cr.commit()
 template=env['res.users'].create({
   'login':'template',
   'password':'',
@@ -136,6 +138,7 @@ template=env['res.users'].create({
   'tz':'$tz',
   'lang':'$lang'
 })
+self.env.cr.commit()
 self.company_id.ldaps.create({
   'ldap_server':'localhost',
   'ldap_server_port':389,
