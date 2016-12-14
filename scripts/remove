@@ -2,6 +2,10 @@
 set -eu
 
 app=$YNH_APP_INSTANCE_NAME
+
+# Load common variables
+source ./_common.sh
+
 # Source YunoHost helpers
 . /usr/share/yunohost/helpers
 

@@ -11,6 +11,9 @@ admin_password=$YNH_APP_ARG_ADMIN_PASSWORD
 database_password=$YNH_APP_ARG_DATABASE_PASSWORD
 lang=$YNH_APP_ARG_LANG
 
+# Load common variables
+source ./_common.sh
+
 # Source YunoHost helpers
 . /usr/share/yunohost/helpers
 
@@ -52,12 +55,19 @@ else
 
   	# Initialize installation
     ynh_package_install postgresql
-    sudo su -c "psql" postgres <<< \
-    "CREATE USER $app WITH PASSWORD '$database_password' CREATEDB;"
+    # This db may be unused
+    dbuser=$app
+    dbname=$app
+    ynh_psql_create_db "$dbname" "$dbuser" "$database_password"
     ynh_package_install odoo
 
     # Install wkhtmltopdf to print PDF reports
-    ynh_package_install wkhtmltopdf
+    ynh_package_install xfonts-75dpi xfonts-base wkhtmltopdf
+
+    # The debian package has a bug so we deploy a more recent version    
+    extract_sources "/usr/" "$app"
+
+
 
     # Set admin password
     # TODO Support @ in password
@@ -78,22 +88,6 @@ else
     sudo yunohost service stop odoo
     sudo yunohost service start odoo
 fi
-
-ynh_psql_create_user() {
-        sudo su -c "psql" postgres <<< \
-        "CREATE USER ${1} WITH PASSWORD '${2}';"
-}
-ynh_psql_create_db() {
-    db=$1
-    # grant all privilegies to user
-    if [[ $# -gt 1 ]]; then
-        ynh_psql_create_user ${2} '${3}'
-        sudo su -c "createdb -O ${2} $db" postgres
-    else
-        sudo su -c "createdb $db" postgres
-    fi
-
-}
 
 # Configure Nginx and reload
 sed -i "s@#YNH_APP_INSTANCE_NAME#@${YNH_APP_INSTANCE_NAME}@g" ../conf/nginx.conf
