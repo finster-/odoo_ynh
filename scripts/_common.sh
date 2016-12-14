@@ -84,10 +84,12 @@ extract_sources() {
   rm -f "$tarball"
 
   # apply patches
-  (cd "$DESTDIR" \
-   && for p in ${PKGDIR}/patches/*.patch; do \
-        exec_as "$AS_USER" patch -p1 < $p; done) \
-    || ynh_die "Unable to apply patches"
+  if [[ -d "${PKGDIR}/patches" ]]; then
+      (cd "$DESTDIR" \
+       && for p in ${PKGDIR}/patches/*.patch; do \
+            exec_as "$AS_USER" patch -p1 < $p; done) \
+        || ynh_die "Unable to apply patches"
+  fi
 }
 
 # Execute a command as another user
