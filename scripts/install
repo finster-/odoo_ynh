@@ -72,7 +72,7 @@ else
     sudo mkdir -p $DESTDIR
     sudo chown -R $APPNAME: /tmp/wkhtmltox
     extract_sources $DESTDIR "$APPNAME"
-    sudo mv "$DESTDIR." /usr/
+    sudo cp "$DESTDIR." /usr/
     sudo rm -Rf $DESTDIR
 
 
