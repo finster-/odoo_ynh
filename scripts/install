@@ -76,6 +76,7 @@ else
     sudo rm -Rf $DESTDIR
 
     ynh_psql_execute_as_root "ALTER USER $APPNAME WITH CREATEDB;"
+    ynh_psql_execute_as_root "ALTER USER $APPNAME WITH PASSWORD '$dbpass';"
     sudo su -c "createdb -O $APPNAME $APPNAME" -  postgres
 
     # Set admin password
