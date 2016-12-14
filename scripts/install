@@ -75,6 +75,7 @@ else
     sudo cp -R "$DESTDIR." /usr/
     sudo rm -Rf $DESTDIR
 
+    ynh_psql_create_db  $APPNAME $APPNAME "$dbpass"
 
     # Set admin password
     # TODO Support @ in password
