@@ -1,61 +1,64 @@
 {
-    "name": "Odoo",
-    "id": "odoo",
-    "packaging_format": 1,
-    "description": {
-        "en": "Odoo is a suite of business apps (ERP: CRM, Accounting, Point of Sale, HR, Purchases...).",
-        "fr": "Odoo est une collection d'apps de gestion d'entreprise (ERP : CRM, Comptabilité, Point de Vente, RH, Achats, ...)."
-    },
-    "maintainer": {
-        "name": "scith, ljf",
-        "email": "ljf+yunohost@grimaud.me"
-    },
-    "url":"https://www.odoo.com",
-    "license":"free",
-    "requirements": {
-        "yunohost": ">= 2.4.0"
-    },
-    "multi_instance": true,
-    "services": [
-        "nginx"
-    ],
-    "arguments": {
-        "install" : [
-            {
-                "name": "domain",
-                "type": "domain",
-                "ask": {
-                    "en": "Choose a domain for Odoo (Odoo will be installed on its root!)",
-                    "fr": "Choisissez un domaine pour Odoo (Odoo sera installé dans sa racine !)"
-                },
-                "example": "odoo.domain.org"
-            },
-			{
-                "name": "odoo_version",
-                "ask": {
-                    "en": "Which version of Odoo do you want to install?",
-					"fr": "Quelle version d'Odoo souhaitez-vous installer ?"
-                },
-                "choices": ["8.0", "9.0", "10.0"],
-                "default": "9.0"
-            },
-			{
-                "name": "admin_password",
-                "type": "password",
-                "ask": {
-                    "en": "Choose a strong master admin password",
-					"fr": "Choisissez un mot de passe maître fort pour l'administration"
-                }
-            },
-			{
-                "name": "lang",
-                "ask": {
-                    "en": "Choose a language for Odoo",
-					"fr": "Choisissez une langue pour Odoo"
-                },
-                "choices": ["en_US", "fr_FR", "de_DE"],
-                "default": "en_US"
-            }
-        ]
-    }
+  "name": "Odoo",
+  "id": "odoo",
+  "packaging_format": 1,
+  "description": {
+    "en": "Odoo is a suite of business apps (ERP: CRM, Accounting, Point of Sale, HR, Purchases...).",
+    "fr": "Odoo est une collection d'apps de gestion d'entreprise (ERP : CRM, Comptabilité, Point de Vente, RH, Achats, ...)."
+  },
+  "maintainer": {
+    "name": "scith, ljf",
+    "email": "ljf+yunohost@grimaud.me"
+  },
+  "url": "https://www.odoo.com",
+  "license": "free",
+  "requirements": {
+    "yunohost": ">= 2.4.0"
+  },
+  "multi_instance": true,
+  "services": [
+    "nginx"
+  ],
+  "arguments": {
+    "install": [{
+      "name": "domain",
+      "type": "domain",
+      "ask": {
+        "en": "Choose a domain for Odoo (Odoo will be installed on its root!)",
+        "fr": "Choisissez un domaine pour Odoo (Odoo sera installé dans sa racine !)"
+      },
+      "example": "odoo.domain.org"
+    }, {
+      "name": "version",
+      "ask": {
+        "en": "Which version of Odoo do you want to install?",
+        "fr": "Quelle version d'Odoo souhaitez-vous installer ?"
+      },
+      "choices": ["8.0", "9.0", "10.0"],
+      "default": "9.0"
+    }, {
+      "name": "oca",
+      "type": "boolean",
+      "ask": {
+        "en": "Use OCA repository to get community bugfixes ?",
+        "fr": "Utiliser les dépots OCA pour bénéficier des bugfix communautaires ?"
+      },
+      "default": false
+    }, {
+      "name": "admin_password",
+      "type": "password",
+      "ask": {
+        "en": "Choose a strong master admin password",
+        "fr": "Choisissez un mot de passe maître fort pour l'administration"
+      }
+    }, {
+      "name": "lang",
+      "ask": {
+        "en": "Choose a language for Odoo",
+        "fr": "Choisissez une langue pour Odoo"
+      },
+      "choices": ["en_US", "fr_FR", "de_DE"],
+      "default": "en_US"
+    }]
+  }
 }

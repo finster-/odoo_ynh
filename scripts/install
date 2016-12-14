@@ -6,7 +6,8 @@ app=$YNH_APP_INSTANCE_NAME
 
 # Retrieve arguments
 domain=$YNH_APP_ARG_DOMAIN
-odoo_version=$YNH_APP_ARG_ODOO_VERSION
+version=$YNH_APP_ARG_VERSION
+oca=$YNH_APP_ARG_OCA
 admin_password=$YNH_APP_ARG_ADMIN_PASSWORD
 lang=$YNH_APP_ARG_LANG
 
@@ -46,7 +47,7 @@ else
     echo "Installing odoo"
 
 
-    ynh_app_setting_set "$app" version "$odoo_version"
+    ynh_app_setting_set "$app" version "$version"
     ynh_app_setting_set "$app" instance "master"
 
   	# Install Odoo
@@ -55,7 +56,7 @@ else
 
   	# Install Odoo
   	sudo curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
-  	sudo sh -c "echo 'deb http://nightly.odoo.com/${odoo_version}/nightly/deb/ ./' > /etc/apt/sources.list.d/odoo.list"
+  	sudo sh -c "echo 'deb http://nightly.odoo.com/${version}/nightly/deb/ ./' > /etc/apt/sources.list.d/odoo.list"
   	sudo apt-get update
 
   	# Initialize installation
