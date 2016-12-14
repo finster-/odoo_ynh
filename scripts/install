@@ -41,8 +41,6 @@ else
 
     echo "Installing odoo"
 
-    dbname=$APPNAME
-    dbuser=$APPNAME
     # Generate random password
     # Fix a bug on ynh_string_random https://github.com/YunoHost/yunohost/pull/205/commits/0d6cf499a0b858e7009245fd11a9210188047c13
     dbpass=$(ynh_string_random | sed "s/\[/e/g" | sed "s/\]/e/g")
@@ -65,10 +63,7 @@ else
   	sudo apt-get update
 
   	# Initialize installation
-    ynh_package_install postgresql
-    # This db may be unused
-    ynh_psql_create_db "$dbname" "$dbuser" "$dbpass"
-    ynh_package_install odoo
+    ynh_package_install postgresql odoo
 
     # Install wkhtmltopdf to print PDF reports
     ynh_package_install xfonts-75dpi xfonts-base wkhtmltopdf

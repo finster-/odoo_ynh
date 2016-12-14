@@ -25,8 +25,6 @@ if [ "$instance" = "master" ]; then
 		ynh_package_remove wkhtmltopdf
     sudo rm -f /etc/odoo/openerp-server.conf
 		sudo yunohost service remove odoo
-    ynh_psql_drop_db $APPNAME
-    ynh_psql_drop_user $APPNAME
 fi
 
 # Remove database
