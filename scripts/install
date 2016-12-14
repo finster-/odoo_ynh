@@ -24,9 +24,13 @@ sudo yunohost app checkurl $domain -a $app \
 # Remove trailing "/" for next commands
 domain=${domain%/}
 
+# Generate random password
+# Fix a bug on ynh_string_random https://github.com/YunoHost/yunohost/pull/205/commits/0d6cf499a0b858e7009245fd11a9210188047c13
+dbpass=$(ynh_string_random | sed "s/\[/e/g" | sed "s/\]/e/g")
 
 ynh_app_setting_set "$app" domain "$domain"
 ynh_app_setting_set "$app" lang "$lang"
+ynh_app_setting_set "$app" psqlpwd "$dbpass"
 
 
 if [ -f /usr/bin/openerp-server ]; then
@@ -41,13 +45,9 @@ else
 
     echo "Installing odoo"
 
-    # Generate random password
-    # Fix a bug on ynh_string_random https://github.com/YunoHost/yunohost/pull/205/commits/0d6cf499a0b858e7009245fd11a9210188047c13
-    dbpass=$(ynh_string_random | sed "s/\[/e/g" | sed "s/\]/e/g")
 
     ynh_app_setting_set "$app" version "$odoo_version"
     ynh_app_setting_set "$app" instance "master"
-    ynh_app_setting_set "$app" psqlpwd "$dbpass"
 
   	# Install Odoo
   	# Prepare installation
@@ -69,8 +69,10 @@ else
     ynh_package_install xfonts-75dpi xfonts-base wkhtmltopdf
 
     # The debian package has a bug so we deploy a more recent version
-    extract_sources "/usr/" "$app"
-
+    DESTDIR="/tmp/wkhtmltox/"
+    mkdir -p $DESTDIR
+    extract_sources $DESTDIR "$app"
+    mv "$DESTDIR." /usr/
 
 
     # Set admin password

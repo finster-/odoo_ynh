@@ -16,23 +16,22 @@ database=${domain//./-}
 instance=$(ynh_app_setting_get "$app" instance)
 
 
-sudo yunohost service stop odoo
+sudo yunohost service stop odoo | true
 # If removing master instance, remove Odoo.
 if [ "$instance" = "master" ]; then
     sudo rm -f /etc/apt/sources.list.d/odoo.list
     sudo apt-get update
     ynh_package_remove odoo
-		ynh_package_remove wkhtmltopdf
     sudo rm -f /etc/odoo/openerp-server.conf
-		sudo yunohost service remove odoo
+		sudo yunohost service remove odoo | true
 fi
 
 # Remove database
-ynh_psql_drop_db $database
-ynh_psql_drop_user $database
+ynh_psql_drop_db $database | true
+ynh_psql_drop_user $database | true
 
 if [ "$instance" = "slave" ]; then
-		sudo yunohost service start odoo
+		sudo yunohost service start odoo | true
 fi
 # Remove NGINX conf
 sudo rm /etc/nginx/conf.d/$domain.d/$app.conf
