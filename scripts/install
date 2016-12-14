@@ -10,6 +10,7 @@ version=$YNH_APP_ARG_VERSION
 oca=$YNH_APP_ARG_OCA
 admin_password=$YNH_APP_ARG_ADMIN_PASSWORD
 lang=$YNH_APP_ARG_LANG
+tz=$YNH_APP_ARG_TZ
 
 # Load common variables
 source ./_common.sh
@@ -31,6 +32,7 @@ dbpass=$(ynh_string_random | sed "s/\[/e/g" | sed "s/\]/e/g")
 
 ynh_app_setting_set "$app" domain "$domain"
 ynh_app_setting_set "$app" lang "$lang"
+ynh_app_setting_set "$app" tz "$tz"
 ynh_app_setting_set "$app" psqlpwd "$dbpass"
 
 
@@ -57,6 +59,7 @@ else
   	# Install Odoo
   	sudo curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
   	sudo sh -c "echo 'deb http://nightly.odoo.com/${version}/nightly/deb/ ./' > /etc/apt/sources.list.d/odoo.list"
+    # TODO if 8.0 install https://www.odoo.com/apps/modules/8.0/shell/
   	sudo apt-get update
 
   	# Initialize installation
@@ -115,12 +118,29 @@ sudo service postgresql reload
 
 # Setup database: not working
 database=${domain//./-}
-sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf --stop-after-init -d $database
-#ynh_psql_create_db $database
-#sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/install_database.py
-#sudo sed -i "s@DOMAIN_DATABASE@${domain//./-}@g" ../conf/install_database.py
-#sudo sed -i "s@DATABASE_LANG@$lang@g" ../conf/install_database.py
-#sudo sed -i "s@DATABASE_PASSWORD@$dbpass@g" ../conf/install_database.py
-#sudo python ../conf/install_database.py
+sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf --stop-after-init -d $database --load-language $lang
+sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf shell <<< \
+"
+self.change_password('admin','$admin_password')
+self.write({'tz':'$tz','lang':'$lang'})
+template=env['res.users'].create({
+  'login':'template',
+  'password':'',
+  'name':'template',
+  'email':'template',
+  'sel_groups_9_10':9,
+  'tz':'$tz',
+  'lang':'$lang'
+})
+self.company_id.ldaps.create({
+  'ldap_server':'localhost',
+  'ldap_server_port':389,
+  'ldap_base':'ou=users, dc=yunohost,dc=org',
+  'ldap_filter':'uid=%s',
+  'user':template.id,
+  'company':self.company_id.id
+})
+self.env.cr.commit()
+"
+
 sudo service odoo restart
-# Setup LDAP: TO BE DONE
