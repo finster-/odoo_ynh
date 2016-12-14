@@ -75,8 +75,8 @@ else
     sudo cp -R "$DESTDIR." /usr/
     sudo rm -Rf $DESTDIR
 
-    ynh_psql_create_db  $APPNAME $APPNAME "$dbpass"
     ynh_psql_execute_as_root "ALTER USER $APPNAME WITH CREATEDB;"
+    sudo su -c "createdb -O $APPNAME $APPNAME" -  postgres
 
     # Set admin password
     # TODO Support @ in password
