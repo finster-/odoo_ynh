@@ -55,15 +55,13 @@ else
 
   	# Install Odoo
   	sudo curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
-  	if [ "$odoo_version" = "8.0" ]; then
-  		sudo sh -c 'echo "deb http://nightly.odoo.com/8.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
-  	else
-  		sudo sh -c 'echo "deb http://nightly.odoo.com/9.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
-  	fi
+  	sudo sh -c "echo 'deb http://nightly.odoo.com/${odoo_version}/nightly/deb/ ./' > /etc/apt/sources.list.d/odoo.list"
   	sudo apt-get update
 
   	# Initialize installation
-    ynh_package_install postgresql odoo
+    ynh_package_install postgresql
+
+    ynh_package_install odoo
 
     # Install wkhtmltopdf to print PDF reports
     ynh_package_install xfonts-75dpi xfonts-base wkhtmltopdf

@@ -34,7 +34,7 @@ if [ "$instance" = "slave" ]; then
 		sudo yunohost service start odoo | true
 fi
 # Remove NGINX conf
-sudo rm /etc/nginx/conf.d/$domain.d/$app.conf
+sudo rm /etc/nginx/conf.d/$domain.d/$app.conf | true
 
 # Reload
 sudo service nginx reload
