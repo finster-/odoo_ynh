@@ -118,8 +118,12 @@ sudo service postgresql reload
 
 # Setup database: not working
 database=${domain//./-}
+
+# Load translation
 sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf --stop-after-init -d $database --load-language $lang
-sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf shell <<< \
+
+# Configure language, timezone and ldap
+sudo /usr/bin/openerp-server shell -c /etc/odoo/openerp-server.conf --stop-after-init -d $database <<< \
 "
 self.change_password('admin','$admin_password')
 self.write({'tz':'$tz','lang':'$lang'})
