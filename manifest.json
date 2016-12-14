@@ -47,13 +47,6 @@
                 }
             },
 			{
-                "name": "database_password",
-                "ask": {
-                    "en": "Choose a password for the 'admin' account on Odoo",
-					"fr": "Choisissez un mot de passe pour le compte 'admin' d'Odoo"
-                }
-            },
-			{
                 "name": "lang",
                 "ask": {
                     "en": "Choose a language for Odoo",

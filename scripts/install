@@ -8,7 +8,6 @@ app=$YNH_APP_INSTANCE_NAME
 domain=$YNH_APP_ARG_DOMAIN
 odoo_version=$YNH_APP_ARG_ODOO_VERSION
 admin_password=$YNH_APP_ARG_ADMIN_PASSWORD
-database_password=$YNH_APP_ARG_DATABASE_PASSWORD
 lang=$YNH_APP_ARG_LANG
 
 # Load common variables
@@ -24,7 +23,10 @@ sudo yunohost app checkurl $domain -a $app \
 
 # Remove trailing "/" for next commands
 domain=${domain%/}
+
+
 ynh_app_setting_set "$app" domain "$domain"
+ynh_app_setting_set "$app" lang "$lang"
 
 
 if [ -f /usr/bin/openerp-server ]; then
@@ -37,9 +39,18 @@ else
   	  ynh_die "Port 8069 unavailable" 1
   	fi
 
-  	echo "Installing odoo"
+    echo "Installing odoo"
+
+    dbname=$app
+    dbuser=$app
+    # Generate random password
+    # Fix a bug on ynh_string_random https://github.com/YunoHost/yunohost/pull/205/commits/0d6cf499a0b858e7009245fd11a9210188047c13
+    dbpass=$(ynh_string_random | sed "s/\[/e/g" | sed "s/\]/e/g")
+
     ynh_app_setting_set "$app" version "$odoo_version"
     ynh_app_setting_set "$app" instance "master"
+    ynh_app_setting_set "$app" psqlpwd "$dbpass"
+    
   	# Install Odoo
   	# Prepare installation
     ynh_package_install curl
@@ -56,15 +67,13 @@ else
   	# Initialize installation
     ynh_package_install postgresql
     # This db may be unused
-    dbuser=$app
-    dbname=$app
-    ynh_psql_create_db "$dbname" "$dbuser" "$database_password"
+    ynh_psql_create_db "$dbname" "$dbuser" "$dbpass"
     ynh_package_install odoo
 
     # Install wkhtmltopdf to print PDF reports
     ynh_package_install xfonts-75dpi xfonts-base wkhtmltopdf
 
-    # The debian package has a bug so we deploy a more recent version    
+    # The debian package has a bug so we deploy a more recent version
     extract_sources "/usr/" "$app"
 
 
@@ -72,7 +81,7 @@ else
     # Set admin password
     # TODO Support @ in password
     sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/openerp-server.conf
-    sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/openerp-server.conf
+    sudo sed -i "s@DATABASE_PASSWORD@$dbpass@g" ../conf/openerp-server.conf
     sudo cp ../conf/openerp-server.conf /etc/odoo/openerp-server.conf
     sudo chown odoo:odoo /etc/odoo/openerp-server.conf
 
@@ -110,7 +119,7 @@ sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf --stop-after-init 
 #sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/install_database.py
 #sudo sed -i "s@DOMAIN_DATABASE@${domain//./-}@g" ../conf/install_database.py
 #sudo sed -i "s@DATABASE_LANG@$lang@g" ../conf/install_database.py
-#sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/install_database.py
+#sudo sed -i "s@DATABASE_PASSWORD@$dbpass@g" ../conf/install_database.py
 #sudo python ../conf/install_database.py
 sudo service odoo restart
 # Setup LDAP: TO BE DONE
