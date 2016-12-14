@@ -69,11 +69,11 @@ else
 
     # The debian package has a bug so we deploy a more recent version
     DESTDIR="/tmp/wkhtmltox/"
-    mkdir -p $DESTDIR
-    chown -R $APPNAME: /tmp/wkhtmltox
+    sudo mkdir -p $DESTDIR
+    sudo chown -R $APPNAME: /tmp/wkhtmltox
     extract_sources $DESTDIR "$APPNAME"
-    mv "$DESTDIR." /usr/
-    rm -Rf $DESTDIR
+    sudo mv "$DESTDIR." /usr/
+    sudo rm -Rf $DESTDIR
 
 
     # Set admin password
