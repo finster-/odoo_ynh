@@ -22,44 +22,16 @@ sudo yunohost app checkurl $domain -a $app \
 # Remove trailing "/" for next commands
 domain=${domain%/}
 ynh_app_setting_set "$app" domain "$domain"
-ynh_app_setting_set "$app" domain "$domain"
 
-is_master=false
-
-# Exit to allow host change in my trap function
-function exit_without_linter_warning
-{
-    ynh_die "$1" $2
-}
-
-function exit_properly
-{
-
-    set +e
-    if [ "$is_master" = true ]; then
-        sudo rm -f /etc/apt/sources.list.d/odoo.list
-        sudo apt-get update
-        ynh_package_remove odoo
-        sudo rm -f /etc/odoo/openerp-server.conf
-        sudo yunohost service remove odoo
-    fi
-    # TODO: uninstall db
-    sudo rm -f /etc/nginx/conf.d/$domain.d/$app.conf
-    sudo service nginx reload
-    exit_without_linter_warning "Error during installation" 1
-}
-
-trap exit_properly ERR
 
 if [ -f /usr/bin/openerp-server ]; then
 	echo "Odoo is already installed, switching to multi-instances"
   ynh_app_setting_set "$app" instance "slave"
 
 else
-    is_master=true
   	sudo yunohost app checkport 8069
   	if [[ ! $? -eq 0 ]]; then
-  	  exit_without_linter_warning "Port 8069 unavailable" 1
+  	  ynh_die "Port 8069 unavailable" 1
   	fi
 
   	echo "Installing odoo"
@@ -88,6 +60,7 @@ else
     ynh_package_install wkhtmltopdf
 
     # Set admin password
+    # TODO Support @ in password
     sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/openerp-server.conf
     sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/openerp-server.conf
     sudo cp ../conf/openerp-server.conf /etc/odoo/openerp-server.conf
@@ -123,6 +96,7 @@ ynh_psql_create_db() {
 }
 
 # Configure Nginx and reload
+sed -i "s@#YNH_APP_INSTANCE_NAME#@${YNH_APP_INSTANCE_NAME}@g" ../conf/nginx.conf
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
 
 # Make Odoo public
@@ -144,6 +118,5 @@ sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf --stop-after-init 
 #sudo sed -i "s@DATABASE_LANG@$lang@g" ../conf/install_database.py
 #sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/install_database.py
 #sudo python ../conf/install_database.py
-
+sudo service odoo restart
 # Setup LDAP: TO BE DONE
-echo $?
