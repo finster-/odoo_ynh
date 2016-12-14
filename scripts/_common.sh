@@ -21,19 +21,28 @@ PKGDIR=$(cd ../; pwd)
 # Common helpers
 #
 
+# # Execute a command as root user
+#
+# usage: ynh_psql_execute_as_root sql [db]
+# | arg: sql - the SQL command to execute
+# | arg: db - the database to connect to
+ynh_psql_execute_as_root () {
+        sudo su -c "psql" postgres <<< ${1}
+}
+
 # Create a user
 #
-# usage: ynh_mysql_create_user user pwd [host]
+# usage: ynh_psql_create_user user pwd [host]
 # | arg: user - the user name to create
 # | arg: pwd - the password to identify user by
 ynh_psql_create_user() {
-        sudo su -c "psql" postgres <<< \
+        ynh_psql_execute_as_root \
         "CREATE USER ${1} WITH PASSWORD '${2}';"
 }
 
 # Create a database and grant optionnaly privilegies to a user
 #
-# usage: ynh_mysql_create_db db [user [pwd]]
+# usage: ynh_psql_create_db db [user [pwd]]
 # | arg: db - the database name to create
 # | arg: user - the user to grant privilegies
 # | arg: pwd - the password to identify user by
@@ -51,7 +60,7 @@ ynh_psql_create_db() {
 
 # Drop a database
 #
-# usage: ynh_mysql_drop_db db
+# usage: ynh_psql_drop_db db
 # | arg: db - the database name to drop
 ynh_psql_drop_db() {
     sudo su -c "dropdb ${1}" postgres
@@ -59,7 +68,7 @@ ynh_psql_drop_db() {
 
 # Drop a user
 #
-# usage: ynh_mysql_drop_user user
+# usage: ynh_psql_drop_user user
 # | arg: user - the user name to drop
 ynh_psql_drop_user() {
     sudo su -c "dropuser ${1}" postgres

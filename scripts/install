@@ -76,6 +76,7 @@ else
     sudo rm -Rf $DESTDIR
 
     ynh_psql_create_db  $APPNAME $APPNAME "$dbpass"
+    ynh_psql_execute_as_root "ALTER USER $APPNAME WITH CREATEDB;"
 
     # Set admin password
     # TODO Support @ in password
