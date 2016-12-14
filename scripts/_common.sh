@@ -27,7 +27,7 @@ PKGDIR=$(cd ../; pwd)
 # | arg: sql - the SQL command to execute
 # | arg: db - the database to connect to
 ynh_psql_execute_as_root () {
-        sudo su -c "psql" postgres <<< ${1}
+        sudo su -c "psql" - postgres <<< ${1}
 }
 
 # Create a user
@@ -51,9 +51,9 @@ ynh_psql_create_db() {
     # grant all privilegies to user
     if [[ $# -gt 1 ]]; then
         ynh_psql_create_user ${2} "${3}"
-        sudo su -c "createdb -O ${2} $db" postgres
+        sudo su -c "createdb -O ${2} $db" -  postgres
     else
-        sudo su -c "createdb $db" postgres
+        sudo su -c "createdb $db" -  postgres
     fi
 
 }
@@ -63,7 +63,7 @@ ynh_psql_create_db() {
 # usage: ynh_psql_drop_db db
 # | arg: db - the database name to drop
 ynh_psql_drop_db() {
-    sudo su -c "dropdb ${1}" postgres
+    sudo su -c "dropdb ${1}" -  postgres
 }
 
 # Drop a user
@@ -71,7 +71,7 @@ ynh_psql_drop_db() {
 # usage: ynh_psql_drop_user user
 # | arg: user - the user name to drop
 ynh_psql_drop_user() {
-    sudo su -c "dropuser ${1}" postgres
+    sudo su -c "dropuser ${1}" - postgres
 }
 
 
