@@ -41,8 +41,8 @@ else
 
     echo "Installing odoo"
 
-    dbname=$app
-    dbuser=$app
+    dbname=$APPNAME
+    dbuser=$APPNAME
     # Generate random password
     # Fix a bug on ynh_string_random https://github.com/YunoHost/yunohost/pull/205/commits/0d6cf499a0b858e7009245fd11a9210188047c13
     dbpass=$(ynh_string_random | sed "s/\[/e/g" | sed "s/\]/e/g")
@@ -50,7 +50,7 @@ else
     ynh_app_setting_set "$app" version "$odoo_version"
     ynh_app_setting_set "$app" instance "master"
     ynh_app_setting_set "$app" psqlpwd "$dbpass"
-    
+
   	# Install Odoo
   	# Prepare installation
     ynh_package_install curl
