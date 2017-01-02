@@ -68,7 +68,7 @@ else
     ynh_package_install odoo
 
     # Install wkhtmltopdf to print PDF reports
-    ynh_package_install xfonts-75dpi xfonts-base wkhtmltopdf node-less
+    ynh_package_install xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd
 
     # The debian package has a bug so we deploy a more recent version
     DESTDIR="/tmp/wkhtmltox/"
