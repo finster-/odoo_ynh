@@ -4,113 +4,121 @@
 
 APPNAME="odoo"
 
-
-# Package name for dependencies
-DEPS_PKG_NAME="${APPNAME}-deps"
-
-# Remote URL to fetch tarball
-SOURCE_URL="http://download.gna.org/wkhtmltopdf/0.12/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz"
-
-# Remote URL to fetch tarball checksum
-SOURCE_SHA256="049b2cdec9a8254f0ef8ac273afaf54f7e25459a273e27189591edc7d7cf29db"
-
-# App package root directory should be the parent folder
-PKGDIR=$(cd ../; pwd)
-
-#
-# Common helpers
-#
-
-# # Execute a command as root user
-#
-# usage: ynh_psql_execute_as_root sql [db]
-# | arg: sql - the SQL command to execute
-# | arg: db - the database to connect to
-ynh_psql_execute_as_root () {
-        sudo su -c "psql" - postgres <<< ${1}
-}
-
-# Create a user
-#
-# usage: ynh_psql_create_user user pwd [host]
-# | arg: user - the user name to create
-# | arg: pwd - the password to identify user by
-ynh_psql_create_user() {
-        ynh_psql_execute_as_root \
-        "CREATE USER ${1} WITH PASSWORD '${2}';"
-}
-
-# Create a database and grant optionnaly privilegies to a user
-#
-# usage: ynh_psql_create_db db [user [pwd]]
-# | arg: db - the database name to create
-# | arg: user - the user to grant privilegies
-# | arg: pwd - the password to identify user by
-ynh_psql_create_db() {
-    db=$1
-    # grant all privilegies to user
-    if [[ $# -gt 1 ]]; then
-        ynh_psql_create_user ${2} "${3}"
-        sudo su -c "createdb -O ${2} $db" -  postgres
+function define_paths() {
+    # In odoo 10 some file change
+    if [ $(echo "$odoo_version >= 10" | bc) -ne 0 ]; then
+        export source_path=/usr/lib/python2.7/dist-packages/odoo/
+        conf_file=/etc/odoo/odoo.conf
+        bin_file=/usr/bin/odoo
     else
-        sudo su -c "createdb $db" -  postgres
+        export source_path=/usr/lib/python2.7/dist-packages/openerp/
+        conf_file=/etc/odoo/openerp-server.conf
+        bin_file=/usr/bin/openerp-server
+    fi
+}
+
+function check_odoo_version () {
+    if [ $(echo "$odoo_version >= 10" | bc) -ne 0 ]; then
+        if [ -f /usr/bin/openerp-server ]; then
+            ynh_die "Another version of odoo is installed"
+        fi
+    else
+        if [ -f /usr/bin/odoo ]; then
+            ynh_die "Another version of odoo is installed"
+        fi
+    fi
+}
+
+function define_is_master() {
+    if [ -f $bin_file ]; then
+        export is_master=false
+    else
+        export is_master=true
+    fi
+}
+
+function define_port () {
+    if [ "$is_master" = true ]; then
+        export port=$(ynh_find_port 8069)
+        yunohost app checkport $port
+        if [[ ! $? -eq 0 ]]; then
+        ynh_die "Port 8069 unavailable" 1
+        fi
+    else
+        # FIXME find master port
+        export port="8069"
+    fi
+}
+
+function define_dbpass () {
+    # TODO set -x
+    if [ "$is_master" = true ]; then
+        # Generate random password
+        if [ "${1:-}" = "restore" ]; then
+            export dbpass=$(ynh_app_setting_get $app psqlpwd)
+        else
+            export dbpass=$(ynh_string_random)
+        fi
+    else
+        export dbpass=$(grep db_password /etc/odoo/odoo.conf | cut -d \= -f 2 | sed -e 's/^[ \t]*//')
+    fi
+    ynh_app_setting_set "$app" psqlpwd "$dbpass"
+}
+
+# Install dependencies
+function install_dependencies() {
+    if [ ! -f /etc/apt/sources.list.d/odoo.list ]; then
+        # Install Odoo
+        # Prepare installation
+        ynh_package_install curl
+
+        # Install Odoo
+        curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
+        sh -c "echo 'deb http://nightly.odoo.com/${odoo_version}/nightly/deb/ ./' > /etc/apt/sources.list.d/odoo.list"
+        # TODO if 8.0 install https://www.odoo.com/apps/modules/8.0/shell/
     fi
 
-}
+    apt-get update
 
-# Drop a database
-#
-# usage: ynh_psql_drop_db db
-# | arg: db - the database name to drop
-ynh_psql_drop_db() {
-    sudo su -c "dropdb ${1}" -  postgres
-}
+    ynh_install_app_dependencies curl postgresql odoo xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd
 
-# Drop a user
-#
-# usage: ynh_psql_drop_user user
-# | arg: user - the user name to drop
-ynh_psql_drop_user() {
-    sudo su -c "dropuser ${1}" - postgres
+    if ! wkhtmltopdf --version | grep "wkhtmltopdf 0.12.4 (with patched qt)"; then
+        # The debian package has a bug so we deploy a more recent version
+        ynh_setup_source /usr/
+    fi
 }
 
 
-# Download and extract sources to the given directory
-# usage: extract_sources DESTDIR [AS_USER]
-extract_sources() {
-  local DESTDIR=$1
-  local AS_USER=${2:-admin}
-
-  # retrieve and extract Roundcube tarball
-  tarball="/tmp/${APPNAME}.tar.xz"
-  rm -f "$tarball"
-  wget -q -O "$tarball" "$SOURCE_URL" \
-    || ynh_die "Unable to download tarball"
-  echo "$SOURCE_SHA256 $tarball" | sha256sum -c >/dev/null \
-    || ynh_die "Invalid checksum of downloaded tarball"
-  exec_as "$AS_USER" tar xJf "$tarball" -C "$DESTDIR" --strip-components 1 \
-    || ynh_die "Unable to extract tarball"
-  rm -f "$tarball"
-
-  # apply patches
-  if [[ -d "${PKGDIR}/patches" ]]; then
-      (cd "$DESTDIR" \
-       && for p in ${PKGDIR}/patches/*.patch; do \
-            exec_as "$AS_USER" patch -p1 < $p; done) \
-        || ynh_die "Unable to apply patches"
-  fi
+# Create db
+function create_general_db() {
+    service postgresql reload
+    if ! su -c "psql -lqt | cut -d \| -f 1 " - postgres | grep $APPNAME; then
+        # Generate random password
+        ynh_psql_execute_as_root "ALTER USER $APPNAME WITH CREATEDB;"
+        ynh_psql_execute_as_root "ALTER USER $APPNAME WITH PASSWORD '$dbpass';"
+        su -c "createdb -O $APPNAME $APPNAME" -  postgres
+    fi
 }
 
-# Execute a command as another user
-# usage: exec_as USER COMMAND [ARG ...]
-exec_as() {
-  local USER=$1
-  shift 1
+# Add services
+function add_services() {
+    if ! grep "^postgresql:$" /etc/yunohost/services.yml; then
+        yunohost service add postgresql
+    fi
+    if ! grep "^odoo:$" /etc/yunohost/services.yml; then
+        yunohost service add odoo --log /var/log/odoo/odoo-server.log
+        yunohost service stop odoo
+        yunohost service start odoo
+    fi
+}
 
-  if [[ $USER = $(whoami) ]]; then
-    eval "$@"
-  else
-    # use sudo twice to be root and be allowed to use another user
-    sudo sudo -u "$USER" "$@"
-  fi
+function ssowat_and_restart() {
+    # Restart odoo service
+    service odoo restart
+
+    # Configure SSOWat
+    ynh_sso_access "/web/database/manager"
+
+    # Reload services
+    service nginx reload
 }

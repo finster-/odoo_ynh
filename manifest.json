@@ -10,10 +10,11 @@
     "name": "scith, ljf",
     "email": "ljf+yunohost@grimaud.me"
   },
+  "version": "10.0-1",
   "url": "https://www.odoo.com",
-  "license": "free",
+  "license": "LGPL-3.0",
   "requirements": {
-    "yunohost": ">= 2.4.0"
+    "yunohost": ">= 2.6.0"
   },
   "multi_instance": true,
   "services": [

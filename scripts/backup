@@ -3,22 +3,28 @@
 # Exit on command errors and treat unset variables as an error
 set -eu
 
-# See comments in install script
-app=$YNH_APP_INSTANCE_NAME
+source /usr/share/yunohost/helpers
+#source _future.sh
+source ../settings/scripts/_common.sh
 
-# Source YunoHost helpers
-. /usr/share/yunohost/helpers
+app=$YNH_APP_INSTANCE_NAME
+domain=$(ynh_app_setting_get "$app" domain)
+odoo_version=$(ynh_app_setting_get "$app" odoo_version)
+
+define_paths
 
 # Backup sources & data
-ynh_backup "/usr/lib/python2.7/dist-packages/openerp/" "sources"
+ynh_backup "${source_path}addons" "$1${source_path}addons"
+
+# Backup configuration
+ynh_backup "$conf_file" "$1$conf_file"
 
 # Copy NGINX configuration
-domain=$(ynh_app_setting_get "$app" domain)
-ynh_backup "/etc/nginx/conf.d/${domain}.d/${app}.conf" "nginx.conf"
-ynh_backup "/etc/odoo/openerp-server.conf" "openerp-server.conf"
+ynh_backup "/etc/nginx/conf.d/${domain}.d/${app}.conf" "etc/nginx/conf.d/${domain}.d/${app}.conf"
+
+# Save postgresql conf
+ynh_backup "/etc/postgresql/9.4/main/pg_hba.conf" "etc/postgresql/9.4/main/pg_hba.conf"
 
 # Copy database
 database=${domain//./-}
 sudo su -c "pg_dump $database" postgres > ./dump.sql
-pwd=`pwd`
-ynh_backup "$pwd/dump.sql" "dump.sql"

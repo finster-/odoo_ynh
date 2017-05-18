@@ -1,3 +1,65 @@
 #!/bin/bash
-app=odoo
-# TO BE DONE
+set -eu
+
+# Import helpers
+source /usr/share/yunohost/helpers
+source ../settings/scripts/_future.sh
+source ../settings/scripts/_common.sh
+
+ynh_trap_on
+
+export app=$YNH_APP_INSTANCE_NAME
+export domain=$(ynh_app_setting_get $app domain)
+export odoo_version=$(ynh_app_setting_get $app odoo_version)
+export oca=$(ynh_app_setting_get $app oca)
+export port=$(ynh_app_setting_get $app port)
+export is_public=0
+
+#=================================================
+# CHECK IF THE APP CAN BE RESTORED
+#=================================================
+ynh_check_var "$app" "app name not set"
+ynh_webpath_available "$domain" "/"
+check_odoo_version
+define_paths
+define_is_master
+define_port
+define_dbpass restore
+
+#=================================================
+# RESTORE THE APP BY MODIFYING THE SYSTEM
+#=================================================
+# Restore files
+function restore_files () {
+    if [ "$is_master" = true ]; then
+        ynh_restore
+    else
+        # If odoo is already setup we just restore nginx and add some missing
+        # modules. Other files are already on system, and we don't want to
+        # erase it
+
+        # Configure Nginx and reload
+        ynh_restore_file "/etc/nginx/conf.d/${domain}.d/${app}.conf"
+
+        # TODO Restore plugin/addons
+    fi
+}
+
+# Restore database
+function restore_database () {
+    # Restore database
+    database=${domain//./-}
+    su -c "createdb -O $APPNAME $database" -  postgres
+    su -c "psql $database" postgres < ./dump.sql
+}
+
+ynh_save_args is_master port
+install_dependencies
+restore_files
+create_general_db
+add_services
+restore_database
+ssowat_and_restart
+
+
+
