@@ -23,27 +23,21 @@ https://example.com/odoo/ will NOT work
 What does not work
 ------------------
 - Backup and restore via Odoo (works with a trick shared on the Github)
-- Backup and restore via YunoHost
 
 Still to do
 -----------
-- Automatic LDAP setup + emails
-- Backup/restore via Odoo fix
-- Backup/restore via YunoHost
-- SMTP settings
+See the project here : https://github.com/YunoHost-Apps/odoo_ynh/projects/1
 
 
 Configuration
 -------------
 
 **Backup via Odoo**
-- In YunoHost, open the port 8069
-- Access Odoo via your server's IP or URL via *:8069* at the end
+- Access Odoo 
 - Go to manage databases and backup
 
 **Restore via Odoo**
-- In YunoHost, open the port 8069 (if you haven't opened it already)
-- Access Odoo via your server's IP or URL via *:8069* at the end
+- Access Odoo
 - Go to manage databases and delete the old database
 - Restore
 - **Important!** The database must be named "*subdomain-domain-tld*" (for example *erp-test-com* if you access the database via *erp.test.com*
