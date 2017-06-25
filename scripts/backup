@@ -15,6 +15,8 @@ define_paths
 
 # Backup sources & data
 ynh_backup "${source_path}addons" "$1${source_path}addons"
+mkdir -p /opt/odoo-oca-addons
+ynh_backup "/opt/odoo-oca-addons" "$1/opt/odoo-oca-addons"
 
 # Backup configuration
 ynh_backup "$conf_file" "$1$conf_file"
