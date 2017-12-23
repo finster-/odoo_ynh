@@ -33,6 +33,8 @@ define_dbpass restore
 function restore_files () {
     if [ "$is_master" = true ]; then
         ynh_restore
+        chown -R odoo:odoo /var/lib/odoo/
+        chown postgres:postgres /etc/postgresql/9.4/main/pg_hba.conf
     else
         # If odoo is already setup we just restore nginx and add some missing
         # modules. Other files are already on system, and we don't want to
