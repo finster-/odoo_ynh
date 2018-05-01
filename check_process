@@ -1,0 +1,37 @@
+;; Test complet sans multisite
+	auto_remove=1
+	; Manifest
+		domain="domain.tld"	(DOMAIN)
+        version="10.0"
+        oca=0
+        admin_password="testpassw0rD"
+		lang="en_US"
+        tz="Europe/Paris"
+	; Checks
+		pkg_linter=1
+		setup_sub_dir=0
+		setup_root=1
+		setup_nourl=0
+		setup_private=0
+		setup_public=1
+		upgrade=1
+		backup_restore=1
+		multi_instance=1
+		wrong_user=0
+		wrong_path=0
+		incorrect_path=0
+		corrupt_source=1
+		fail_download_source=1
+		port_already_use=1
+		final_path_already_use=0
+;;; Levels
+	Level 1=auto
+	Level 2=auto
+	Level 3=auto
+	Level 4=0
+	Level 5=auto
+	Level 6=auto
+	Level 7=auto
+	Level 8=0
+	Level 9=0
+	Level 10=0

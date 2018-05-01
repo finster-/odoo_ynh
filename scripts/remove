@@ -1,31 +1,54 @@
 #!/bin/bash
-set -eu
+set -u
+
+source /usr/share/yunohost/helpers
+source _future.sh
+source _common.sh
 
 app=$YNH_APP_INSTANCE_NAME
-# Source YunoHost helpers
-. /usr/share/yunohost/helpers
+
 
 # Retrieve app settings
 domain=$(ynh_app_setting_get "$app" domain)
-
+odoo_version=$(ynh_app_setting_get "$app" odoo_version)
+if [ "$odoo_version" = "" ]; then
+    exit 0
+fi
 database=${domain//./-}
-instance=$(ynh_app_setting_get "$app" instance)
+is_master=$(ynh_app_setting_get "$app" is_master)
+
+define_paths
+
+yunohost service stop odoo
+list=$(yunohost app list --installed | grep odoo)
+# If removing master instance, remove Odoo.
+if [ $(echo $list | wc -l) = 1 ]; then
+    rm -f /etc/apt/sources.list.d/odoo.list
+    apt-get update
+	yunohost service remove odoo
+    ynh_psql_drop_db $APPNAME
+    #ynh_psql_drop_user $APPNAME
+else
+    # Set another app as master
+    if [ "$is_master" = "true" ]; then
+        for instance in $list; do
+            if [ "$instance" != "$app" ]; then
+                ynh_app_setting_set "$instance" is_master "true"
+                break
+            fi
+        done
+        is_master="false"
+    fi
+fi
+
+ynh_remove_app_dependencies
 
 # Remove database
-sudo su -c "dropdb $database" postgres 
+ynh_psql_drop_db $database
 
-# If removing master instance, remove Odoo.
-if [ "$instance" = "master" ]; then
-	# Remove Odoo
-		sudo yunohost service stop odoo
-		sudo apt-get remove odoo -y
-		sudo apt-get remove wkhtmltopdf -y
-		sudo yunohost service remove odoo
+if [ "$is_master" = "false" ]; then
+    yunohost service start odoo
 fi
 
 # Remove NGINX conf
-sudo rm /etc/nginx/conf.d/$domain.d/$app.conf
-
-# Reload
-sudo service nginx reload
-sudo yunohost app ssowatconf
+ynh_rm_nginx_conf

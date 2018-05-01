@@ -22,42 +22,22 @@ https://example.com/odoo/ will NOT work
 
 What does not work
 ------------------
-- Automatic database creation (experimental)
 - Backup and restore via Odoo (works with a trick shared on the Github)
-- Backup and restore via YunoHost
-- Automatic LDAP configuration
 
 Still to do
 -----------
-- Automatic LDAP setup + emails
-- Backup/restore via Odoo fix
-- Backup/restore via YunoHost
-- SMTP settings
+See the project here : https://github.com/YunoHost-Apps/odoo_ynh/projects/1
 
 
 Configuration
 -------------
-**Create the database manually**
-- The database must be named "*subdomain-domain-tld*" (for example *erp-test-com* if you access the database via *erp.test.com*
-
-**Setup LDAP**
-- Create a user named "template" with email "template". This user will give its permissions by default to YunoHost users so you can also give it appropriate permissions.
-- In "Edit Company Data" (on the logo), go to "Configuration" and add a LDAP setting
-- LDAP Address: localhost
-- LDAP Port: 389
-- LDAP Base: ou=users, dc=yunohost,dc=org
-- LDAP filter: uid=%s
-- Template user: template
-- Save
 
 **Backup via Odoo**
-- In YunoHost, open the port 8069
-- Access Odoo via your server's IP or URL via *:8069* at the end
+- Access Odoo 
 - Go to manage databases and backup
 
 **Restore via Odoo**
-- In YunoHost, open the port 8069 (if you haven't opened it already)
-- Access Odoo via your server's IP or URL via *:8069* at the end
+- Access Odoo
 - Go to manage databases and delete the old database
 - Restore
 - **Important!** The database must be named "*subdomain-domain-tld*" (for example *erp-test-com* if you access the database via *erp.test.com*

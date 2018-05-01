@@ -1,11 +1,11 @@
 [options]
 ; This is the password that allows database operations:
 without_demo = all
-admin_passwd = ADMIN_PASSWORD
+admin_passwd = {{ admin_password }}
 db_host = false
 db_port = false
 db_user = odoo
-db_password = DATABASE_PASSWORD
-addons_path = /usr/lib/python2.7/dist-packages/openerp/addons
+db_password = {{ dbpass }}
+addons_path = {{ source_path }}addons
 proxy_mode = true
 dbfilter = %h

@@ -2,130 +2,99 @@
 
 set -eu
 
-app=$YNH_APP_INSTANCE_NAME
+source /usr/share/yunohost/helpers
+source _future.sh
+source _common.sh
 
-# Retrieve arguments
-domain=$YNH_APP_ARG_DOMAIN
-odoo_version=$YNH_APP_ARG_ODOO_VERSION
-admin_password=$YNH_APP_ARG_ADMIN_PASSWORD
-database_password=$YNH_APP_ARG_DATABASE_PASSWORD
-lang=$YNH_APP_ARG_LANG
+ynh_trap_on
 
-# Source YunoHost helpers
-. /usr/share/yunohost/helpers
+# Arguments from manifest
+export app=$YNH_APP_INSTANCE_NAME
+export domain=$YNH_APP_ARG_DOMAIN
+export odoo_version=$YNH_APP_ARG_VERSION
+export oca=$YNH_APP_ARG_OCA
+export admin_password=$YNH_APP_ARG_ADMIN_PASSWORD
+export lang=$YNH_APP_ARG_LANG
+export tz=$YNH_APP_ARG_TZ
+export is_public=0
 
-# Check domain/path availability
-domain=${domain}"/"
-sudo yunohost app checkurl $domain -a $app \
-	|| (echo "Path not available: $domain" && exit 1)
+#=================================================
+# CHECK IF THE APP CAN BE INSTALLED WITH THIS ARGS
+#=================================================
+ynh_check_var "$app" "app name not set"
+ynh_webpath_available "$domain" "/"
+check_odoo_version
+define_paths
+define_is_master
+define_port
+define_dbpass
 
-# Remove trailing "/" for next commands
-domain=${domain%/}
-ynh_app_setting_set "$app" domain "$domain"
-ynh_app_setting_set "$app" domain "$domain"
 
-if [ -f /usr/bin/openerp-server ]; then
-	echo "Odoo is already installed, switching to multi-instances"
-  ynh_app_setting_set "$app" instance "slave"
+#=================================================
+# SETUP THE APP BY MODIFYING THE SYSTEM
+#=================================================
+function setup_files() {
+    # Set admin password
+    ynh_configure openerp-server.conf $conf_file
+    chown odoo:odoo $conf_file
 
-else
-	sudo yunohost app checkport 8069
-	if [[ ! $? -eq 0 ]]; then
-	  exit 1
-	fi
-
-	echo "Installing odoo"
-  ynh_app_setting_set "$app" version "$odoo_version"
-  ynh_app_setting_set "$app" instance "master"
-	# Install Odoo
-	# Prepare installation
-  ynh_package_install curl
-
-	# Install Odoo
-		sudo curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
-		if [ "$odoo_version" = "8.0" ]; then
-			sudo sh -c 'echo "deb http://nightly.odoo.com/8.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
-		else
-			sudo sh -c 'echo "deb http://nightly.odoo.com/9.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list'
-		fi
-		sudo apt-get update
-
-		# Initialize installation
-    ynh_package_install postgresql
-    sudo su -c "psql" postgres <<< \
-    "CREATE USER $app WITH PASSWORD '$database_password' CREATEDB;"
-    ynh_package_install odoo
-
-	# Install wkhtmltopdf to print PDF reports
-		ynh_package_install wkhtmltopdf
-
-	# Set admin password
-		sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/openerp-server.conf
-    sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/openerp-server.conf
-		sudo cp ../conf/openerp-server.conf /etc/odoo/openerp-server.conf
-		sudo chown odoo:odoo /etc/odoo/openerp-server.conf
-
-	# Autoinstall the LDAP auth module
-		sudo sed -i "s@'auto_install': False@'auto_install': True@g" /usr/lib/python2.7/dist-packages/openerp/addons/auth_ldap/__openerp__.py
-
-	# Install oerplib to manage databases
-		#sudo pip install oerplib
-
-	# Add services
-		sudo yunohost service add postgresql
-		sudo yunohost service add odoo --log /var/log/odoo/odoo-server.log
-		sudo yunohost service stop odoo
-		sudo yunohost service start odoo
-fi
-
-function exit_properly
-{
-    set +e
-    # TODO: uninstall db
-    sudo rm -f /etc/nginx/conf.d/$domain.d/$app.conf
-    sudo service nginx reload
-    exit 1
-}
-trap exit_properly ERR
-
-ynh_psql_create_user() {
-        sudo su -c "psql" postgres <<< \
-        "CREATE USER ${1} WITH PASSWORD '${2}';"
-}
-ynh_psql_create_db() {
-    db=$1
-    # grant all privilegies to user
-    if [[ $# -gt 1 ]]; then
-        ynh_psql_create_user ${2} '${3}'
-        sudo su -c "createdb -O ${2} $db" postgres
+    # Autoinstall the LDAP auth module
+    if [ $(echo "$odoo_version >= 10" | bc) -ne 0 ]; then
+        ynh_replace_string "^{$" "{'auto_install': True," ${source_path}addons/auth_ldap/__manifest__.py
     else
-        sudo su -c "createdb $db" postgres
+        ynh_replace_string "'auto_install': False" "'auto_install': True" ${source_path}addons/auth_ldap/__openerp__.py
     fi
 
+    # Fix peer authentification issue
+    sed -i '/local\s*all\s*all\s*peer/i \
+    local all odoo password' /etc/postgresql/9.4/main/pg_hba.conf
+
+    ynh_configure_nginx
 }
 
-# Configure Nginx and reload
-sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
+function setup_database() {
 
-# Make Odoo public
-sudo yunohost app setting $app skipped_uris -v "/"
+    # Setup database: not working
+    database=${domain//./-}
 
-sudo service nginx reload
+    # Load translation
+    $bin_file -c $conf_file --stop-after-init -i auth_ldap -d $database
+    $bin_file -c $conf_file --stop-after-init -d $database --load-language $lang
+    # Configure language, timezone and ldap
+    $bin_file shell -c $conf_file -d $database <<< \
+"
+self.change_password('admin','$admin_password')
+self.env.cr.commit()
+self.write({'tz':'$tz','lang':'$lang'})
+self.env.cr.commit()
+template=env['res.users'].create({
+  'login':'template',
+  'password':'',
+  'name':'template',
+  'email':'template',
+  'sel_groups_9_10':9,
+  'tz':'$tz',
+  'lang':'$lang'
+})
+self.env.cr.commit()
+self.company_id.ldaps.create({
+  'ldap_server':'localhost',
+  'ldap_server_port':389,
+  'ldap_base':'ou=users, dc=yunohost,dc=org',
+  'ldap_filter':'uid=%s',
+  'user':template.id,
+  'company':self.company_id.id
+})
+self.env.cr.commit()
+"
+}
 
-# Fix peer authentification issue
-sudo sed -i '/local\s*all\s*all\s*peer/i \
-local all odoo password' /etc/postgresql/9.4/main/pg_hba.conf
-sudo service postgresql reload
+ynh_webpath_register "$app" "$domain" "/"
+ynh_save_args domain odoo_version oca lang tz is_master port
+install_dependencies
+setup_files
+create_general_db
+add_services
+setup_database
+ssowat_and_restart
 
-# Setup database: not working
-database=${domain//./-}
-sudo /usr/bin/openerp-server -c /etc/odoo/openerp-server.conf --stop-after-init -d $database
-#ynh_psql_create_db $database
-#sudo sed -i "s@ADMIN_PASSWORD@$admin_password@g" ../conf/install_database.py
-#sudo sed -i "s@DOMAIN_DATABASE@${domain//./-}@g" ../conf/install_database.py
-#sudo sed -i "s@DATABASE_LANG@$lang@g" ../conf/install_database.py
-#sudo sed -i "s@DATABASE_PASSWORD@$database_password@g" ../conf/install_database.py
-#sudo python ../conf/install_database.py
-
-# Setup LDAP: TO BE DONE
-echo $?
