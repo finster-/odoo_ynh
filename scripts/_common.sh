@@ -87,7 +87,7 @@ function install_dependencies() {
     fi
     apt-get update
 
-    ynh_install_app_dependencies curl postgresql odoo xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd python3-dev gcc libldap2-dev libssl-dev libsasl2-dev
+    ynh_install_app_dependencies curl postgresql odoo xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip
     pip3 install pyldap
 
     if ! wkhtmltopdf --version | grep "wkhtmltopdf 0.12.4 (with patched qt)"; then
