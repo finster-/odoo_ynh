@@ -13,11 +13,11 @@ function define_paths() {
             export source_path=/usr/lib/python2.7/dist-packages/odoo/
         fi
         export conf_file=/etc/odoo/odoo.conf
-        bin_file=/usr/bin/odoo
+        export bin_file=/usr/bin/odoo
     else
         export source_path=/usr/lib/python2.7/dist-packages/openerp/
         export conf_file=/etc/odoo/openerp-server.conf
-        bin_file=/usr/bin/openerp-server
+        export bin_file=/usr/bin/openerp-server
     fi
 }
 
