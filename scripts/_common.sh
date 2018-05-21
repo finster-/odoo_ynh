@@ -8,11 +8,11 @@ function define_paths() {
     # In odoo 10 some file change
     if [ $(echo "$odoo_version >= 10" | bc) -ne 0 ]; then
         export source_path=/usr/lib/python2.7/dist-packages/odoo/
-        conf_file=/etc/odoo/odoo.conf
+        export conf_file=/etc/odoo/odoo.conf
         bin_file=/usr/bin/odoo
     else
         export source_path=/usr/lib/python2.7/dist-packages/openerp/
-        conf_file=/etc/odoo/openerp-server.conf
+        export conf_file=/etc/odoo/openerp-server.conf
         bin_file=/usr/bin/openerp-server
     fi
 }
@@ -70,7 +70,7 @@ function install_dependencies() {
     if [ ! -f /etc/apt/sources.list.d/odoo.list ]; then
         # Install Odoo
         # Prepare installation
-        ynh_package_install curl
+        ynh_package_install curl bc
 
         # Install Odoo
         curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
@@ -106,9 +106,14 @@ function add_services() {
         yunohost service add postgresql
     fi
     if ! grep "^odoo:$" /etc/yunohost/services.yml; then
+        ynh_configure odoo.service /etc/systemd/system/odoo.service
+        rm /etc/init.d/odoo
+
         yunohost service add odoo --log /var/log/odoo/odoo-server.log
         yunohost service stop odoo
         yunohost service start odoo
+        yunohost service enable odoo
+        systemctl enable odoo
     fi
 }
 
