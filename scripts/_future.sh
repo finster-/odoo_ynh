@@ -203,3 +203,26 @@ exec_as() {
     sudo sudo -u "$USER" "$@"
   fi
 }
+
+ynh_debian_release () {
+	lsb_release --codename --short
+}
+
+is_stretch () {
+	if [ "$(ynh_debian_release)" == "stretch" ]
+	then
+		return 0
+	else
+		return 1
+	fi
+}
+
+is_jessie () {
+	if [ "$(ynh_debian_release)" == "jessie" ]
+	then
+		return 0
+	else
+		return 1
+	fi
+}
+

@@ -7,13 +7,17 @@ APPNAME="odoo"
 function define_paths() {
     # In odoo 10 some file change
     if [ $(echo "$odoo_version >= 10" | bc) -ne 0 ]; then
-        export source_path=/usr/lib/python2.7/dist-packages/odoo/
-        conf_file=/etc/odoo/odoo.conf
-        bin_file=/usr/bin/odoo
+        if [ $(echo "$odoo_version >= 11" | bc) -ne 0 ]; then
+            export source_path=/usr/lib/python3/dist-packages/odoo/
+        else
+            export source_path=/usr/lib/python2.7/dist-packages/odoo/
+        fi
+        export conf_file=/etc/odoo/odoo.conf
+        export bin_file=/usr/bin/odoo
     else
         export source_path=/usr/lib/python2.7/dist-packages/openerp/
-        conf_file=/etc/odoo/openerp-server.conf
-        bin_file=/usr/bin/openerp-server
+        export conf_file=/etc/odoo/openerp-server.conf
+        export bin_file=/usr/bin/openerp-server
     fi
 }
 
@@ -70,7 +74,7 @@ function install_dependencies() {
     if [ ! -f /etc/apt/sources.list.d/odoo.list ]; then
         # Install Odoo
         # Prepare installation
-        ynh_package_install curl
+        ynh_package_install curl bc
 
         # Install Odoo
         curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -
@@ -78,9 +82,13 @@ function install_dependencies() {
         # TODO if 8.0 install https://www.odoo.com/apps/modules/8.0/shell/
     fi
 
+    if is_jessie ; then
+        sudo echo "deb http://http.debian.net/debian jessie-backports main" | sudo tee /etc/apt/sources.list.d/jessie-backport.list
+    fi
     apt-get update
 
-    ynh_install_app_dependencies curl postgresql odoo xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd
+    ynh_install_app_dependencies curl postgresql odoo xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip
+    pip3 install pyldap
 
     if ! wkhtmltopdf --version | grep "wkhtmltopdf 0.12.4 (with patched qt)"; then
         # The debian package has a bug so we deploy a more recent version
@@ -106,9 +114,13 @@ function add_services() {
         yunohost service add postgresql
     fi
     if ! grep "^odoo:$" /etc/yunohost/services.yml; then
+        ynh_configure odoo.service /etc/systemd/system/odoo.service
+        rm /etc/init.d/odoo
+
         yunohost service add odoo --log /var/log/odoo/odoo-server.log
         yunohost service stop odoo
         yunohost service start odoo
+        yunohost service enable odoo
     fi
 }
 
