@@ -40,10 +40,6 @@
     }, {
       "name": "oca",
       "type": "boolean",
-      "ask": {
-        "en": "Use OCA repository to get community bugfixes ?",
-        "fr": "Utiliser les dépots OCA pour bénéficier des bugfix communautaires ?"
-      },
       "default": false
     }, {
       "name": "admin_password",
