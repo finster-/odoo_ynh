@@ -88,11 +88,15 @@ function install_dependencies() {
 
     if is_jessie ; then
         sudo echo "deb http://http.debian.net/debian jessie-backports main" | sudo tee /etc/apt/sources.list.d/jessie-backport.list
+        apt-get update
+        ynh_install_app_dependencies curl postgresql odoo xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip
+        pip3 install pyldap
     fi
-    apt-get update
-
-    ynh_install_app_dependencies curl postgresql odoo xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip
-    pip3 install pyldap
+    if is_stretch ; then
+        sudo echo "deb http://http.debian.net/debian stretch-backports main" | sudo tee /etc/apt/sources.list.d/stretch-backport.list
+        apt-get update
+        ynh_install_app_dependencies curl postgresql odoo xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip python3-num2words python3-pyldap python3-phonenumbers
+    fi
 
     if ! wkhtmltopdf --version | grep "wkhtmltopdf 0.12.4 (with patched qt)"; then
         # The debian package has a bug so we deploy a more recent version
