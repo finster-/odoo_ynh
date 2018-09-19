@@ -25,8 +25,11 @@ ynh_backup "$conf_file" "$1$conf_file"
 ynh_backup "/etc/nginx/conf.d/${domain}.d/${app}.conf" "etc/nginx/conf.d/${domain}.d/${app}.conf"
 
 # Save postgresql conf
-ynh_backup "/etc/postgresql/9.4/main/pg_hba.conf" "etc/postgresql/9.4/main/pg_hba.conf"
-
+if is_jessie ; then
+    ynh_backup "/etc/postgresql/9.4/main/pg_hba.conf" "etc/postgresql/9.4/main/pg_hba.conf"
+else
+    ynh_backup "/etc/postgresql/9.6/main/pg_hba.conf" "etc/postgresql/9.6/main/pg_hba.conf"
+fi
 # Copy database
 database=${domain//./-}
 sudo su -c "pg_dump $database" postgres > ./dump.sql

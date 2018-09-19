@@ -23,6 +23,7 @@ function define_paths() {
 }
 
 function check_odoo_version () {
+    command -v bc >/dev/null 2>&1 || ynh_package_install bc
     if [ $(echo "$odoo_version >= 10" | bc) -ne 0 ]; then
         if [ -f /usr/bin/openerp-server ]; then
             ynh_die "Another version of odoo is installed"
@@ -75,7 +76,9 @@ function install_dependencies() {
     if [ ! -f /etc/apt/sources.list.d/odoo.list ]; then
         # Install Odoo
         # Prepare installation
-        ynh_package_install curl bc
+        # We nee to setup postgresql before to let the odoo package make some magic
+        # see red comment on https://nightly.odoo.com/
+        ynh_package_install curl bc postgresql
 
         # Install Odoo
         curl -sS https://nightly.odoo.com/odoo.key | sudo apt-key add -

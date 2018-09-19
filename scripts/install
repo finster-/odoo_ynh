@@ -47,7 +47,7 @@ function setup_files() {
 
     # Fix peer authentification issue
     sed -i '/local\s*all\s*all\s*peer/i \
-    local all odoo password' /etc/postgresql/9.4/main/pg_hba.conf
+    local all odoo password' /etc/postgresql/9.*/main/pg_hba.conf
 
     ynh_configure_nginx
 }
