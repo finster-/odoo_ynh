@@ -35,6 +35,7 @@ define_dbpass
 #=================================================
 function setup_files() {
     # Set admin password
+    export database=${domain//./-}
     ynh_configure openerp-server.conf $conf_file
     chown odoo:odoo $conf_file
 
