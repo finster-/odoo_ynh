@@ -5,6 +5,7 @@
 APPNAME="odoo"
 
 function define_paths() {
+    command -v bc >/dev/null 2>&1 || ynh_package_install bc
     # In odoo 10 some file change
     if [ $(echo "$odoo_version >= 10" | bc) -ne 0 ]; then
         if [ $(echo "$odoo_version >= 11" | bc) -ne 0 ]; then
