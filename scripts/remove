@@ -52,3 +52,5 @@ fi
 
 # Remove NGINX conf
 ynh_rm_nginx_conf
+
+ynh_del_swap

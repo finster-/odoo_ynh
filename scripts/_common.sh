@@ -73,6 +73,7 @@ function define_dbpass () {
 
 # Install dependencies
 function install_dependencies() {
+    ynh_add_swap 1024
     if [ ! -f /etc/apt/sources.list.d/odoo.list ]; then
         # Install Odoo
         # Prepare installation
