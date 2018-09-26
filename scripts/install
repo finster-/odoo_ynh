@@ -58,11 +58,14 @@ function setup_database() {
     # Setup database: not working
     database=${domain//./-}
 
+    if [ $(echo "$odoo_version <= 8" | bc) -ne 0 ]; then
+        su -c "createdb -O $APPNAME $database" -  postgres
+    fi
     # Load translation
-    $bin_file -c $conf_file --stop-after-init -i auth_ldap -d $database
-    $bin_file -c $conf_file --stop-after-init -d $database --load-language $lang
+    sudo -u odoo $bin_file -c $conf_file --stop-after-init -i auth_ldap -d $database
+    sudo -u odoo $bin_file -c $conf_file --stop-after-init -d $database --load-language $lang
     # Configure language, timezone and ldap
-    $bin_file shell -c $conf_file -d $database <<< \
+    sudo -u odoo $bin_file shell -c $conf_file -d $database <<< \
 "
 self.change_password('admin','$admin_password')
 self.env.cr.commit()

@@ -94,7 +94,19 @@ function install_dependencies() {
     fi
     if is_stretch ; then
         sudo echo "deb http://http.debian.net/debian stretch-backports main" | sudo tee /etc/apt/sources.list.d/stretch-backport.list
-        apt-get update
+        if [ $(echo "$odoo_version <= 10" | bc) -ne 0 ]; then
+            cat > /tmp/python-pypdf_1.13_all.control << EOF	# Make a control file for equivs-build
+Section: python
+Package: python-pypdf
+Version: 1.13
+Description: fake package to provide python-pypdf
+EOF
+            ynh_package_install python3-pip
+            ynh_package_install_from_equivs /tmp/python-pypdf_1.13_all.control
+            rm /tmp/python-pypdf_1.13_all.control
+            pip install pyPdf
+        fi
+        apt update
         ynh_install_app_dependencies curl postgresql odoo xfonts-75dpi xfonts-base wkhtmltopdf node-less python-xlrd python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip python3-num2words python3-pyldap python3-phonenumbers
     fi
 
@@ -124,6 +136,7 @@ function add_services() {
     if ! grep "^odoo:$" /etc/yunohost/services.yml; then
         ynh_configure odoo.service /etc/systemd/system/odoo.service
         rm /etc/init.d/odoo
+        systemctl daemon-reload
 
         yunohost service add odoo --log /var/log/odoo/odoo-server.log
         yunohost service stop odoo

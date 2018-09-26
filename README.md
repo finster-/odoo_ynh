@@ -5,39 +5,32 @@ Odoo is a suite of web based open source business apps.
 
 The main Odoo Apps include an <a href="https://www.odoo.com/page/crm">Open Source CRM</a>, <a href="https://www.odoo.com/page/website-builder">Website Builder</a>, <a href="https://www.odoo.com/page/e-commerce">eCommerce</a>, <a href="https://www.odoo.com/page/project-management">Project Management</a>, <a href="https://www.odoo.com/page/accounting">Billing &amp; Accounting</a>, <a href="https://www.odoo.com/page/point-of-sale">Point of Sale</a>, <a href="https://www.odoo.com/page/employees">Human Resources</a>, Marketing, Manufacturing, Purchase Management, ...  
 
-Odoo Apps can be used as stand-alone applications, but they also integrate seamlessly so you get
-a full-featured <a href="https://www.odoo.com">Open Source ERP</a> when you install several Apps.
+Odoo Apps can be used as stand-alone applications, but they also integrate seamlessly so you get a full-featured <a href="https://www.odoo.com">Open Source ERP</a> when you install several Apps.
 
 Odoo for YunoHost
 ----------------------------
-Warning: This YunoHost app is still in development. Use it at your own risk! I am **not** responsible for any data loss that jeopardizes your organization
+**WARNING**: This YunoHost app is working BUT there is a lot of use case, it's very complex to test all of it. Use it at your own risk! I am **not** responsible for any data loss that jeopardizes your organization. THIS PACKAGE IS NOT AN OFFICIAL PACKAGE FROM Odoo SA BUT IT USES OFFICIAL DEBIAN PACKAGE FROM NIGHTLY REPOSITORY FROM Odoo SA.
 
+**WARNING**: Odoo is a complex app. **DO NOT USE THIS PACKAGE** to run your business unless you know what you are doing!!! If you don't, you should consider to ask for help from a professionnal!
 
-**WARNING**: Odoo is a complex app. **DO NOT USE IT** to run your business unless you know what you are doing!!! If you don't, use <a href="https://www.odoo.com/fr_FR/pricing-online#num_users=1&custom_apps=0">the hosted Odoo</a> that will give you peace and customer support!
-
-
-**Important:** This app MUST be installed on a domain's root!
+**IMPORTANT:** This app MUST be installed on a domain's root!
 https://odoo.example.com/ will work
 https://example.com/odoo/ will NOT work
 
-What does not work
-------------------
-- Backup and restore via Odoo (works with a trick shared on the Github)
+To connect on your odoo
+-----------
+- Go on https://YOURDOMAIN/web
+- Use your master password OR admin/admin if you use Odoo 8.0
 
-Still to do
+Contribute
 -----------
 See the project here : https://github.com/YunoHost-Apps/odoo_ynh/projects/1
 
+About jessie support
+-----------
+This app should be able to setup on yunohost 2.7 (jessie) but I am not able to test this point. Some dependencies issues could appears, feel free to create an issue, with the log message.
 
-Configuration
--------------
-
-**Backup via Odoo**
-- Access Odoo 
-- Go to manage databases and backup
-
-**Restore via Odoo**
-- Access Odoo
-- Go to manage databases and delete the old database
-- Restore
-- **Important!** The database must be named "*subdomain-domain-tld*" (for example *erp-test-com* if you access the database via *erp.test.com*
+About licences
+-----------
+Odoo 8.0 is under AGPL-3.0
+Next version are under LGPL-3.0

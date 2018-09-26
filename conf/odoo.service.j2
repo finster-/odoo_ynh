@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=odoo
 Environment=PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
-ExecStart={{ bin_file }} --config {{ conf_file }} > /var/log/odoo/odoo-server.log 2>&1
+ExecStart={{ bin_file }} --config {{ conf_file }} --logfile /var/log/odoo/odoo-server.log
 Restart=always
 RestartSec=3
 
