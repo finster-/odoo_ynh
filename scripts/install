@@ -67,7 +67,7 @@ function setup_database() {
     # Configure language, timezone and ldap
     sudo -u odoo $bin_file shell -c $conf_file -d $database <<< \
 "
-self.change_password('admin','$admin_password')
+self.env['res.users'].search([['login', '=', 'admin']])[0].write({'password': '$admin_password'})
 self.env.cr.commit()
 self.write({'tz':'$tz','lang':'$lang'})
 self.env.cr.commit()

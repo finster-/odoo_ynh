@@ -38,8 +38,8 @@
         "en": "Which version of Odoo do you want to install?",
         "fr": "Quelle version d'Odoo souhaitez-vous installer ?"
       },
-      "choices": ["8.0", "9.0", "10.0", "11.0"],
-      "default": "11.0"
+      "choices": ["8.0", "9.0", "10.0", "11.0", "12.0"],
+      "default": "12.0"
     }, {
       "name": "oca",
       "type": "boolean",
