@@ -52,12 +52,6 @@ ynh_read_manifest () {
         ynh_read_json '../settings/manifest.json' "$1"
     fi
 }
-ynh_exit_if_up_to_date () {
-    if [ "${version}" = "${last_version}" ]; then
-        info "Up-to-date, nothing to do"
-        exit 0
-    fi
-}
 
 
 is_stretch () {
