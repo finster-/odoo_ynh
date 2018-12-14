@@ -69,14 +69,6 @@ if ynh_version_le "11.0-1" ; then
 fi
 
 ynh_system_user_create $app
-ynh_setup_source "$final_path/$APPNAME" $app_version
-mkdir -p $final_path/custom-addons
-chown -R $app:$app $final_path
-ynh_configure server.conf $conf_file
-chown $app:$app $conf_file
-    
-touch /var/log/$app.log
-chown $app:$app /var/log/$app.log
-
+setup_files
 install_dependencies
 service $app restart
