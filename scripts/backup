@@ -22,5 +22,8 @@ ynh_backup "$conf_file"
 # Copy NGINX configuration
 ynh_backup "/etc/nginx/conf.d/${domain}.d/${app}.conf"
 
+# Backup services
+ynh_backup "/etc/systemd/system/${app}.service"
+
 # Copy database
 sudo su -c "pg_dump $app" postgres > ./dump.sql

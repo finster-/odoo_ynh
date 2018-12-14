@@ -11,16 +11,16 @@ ynh_abort_if_errors
 # Arguments from manifest
 export app=$YNH_APP_INSTANCE_NAME
 ynh_export domain oca admin_password lang tz 
-export odoo_version=$YNH_APP_ARG_VERSION
+export app_version=$YNH_APP_ARG_VERSION
 export is_public=0
 export final_path="/var/www/$app"
 export conf_file=/etc/$app/main.conf
-export bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$APPNAME-bin"
-if [ "$odoo_version" = "9" ]; then
-    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$APPNAME.py"
+export bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$FORKNAME-bin"
+if [ "$app_version" = "9" ]; then
+    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$FORKNAME.py"
 fi
-if [ "$odoo_version" = "8" ]; then
-    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$APPNAME.py"
+if [ "$app_version" = "8" ]; then
+    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$FORKNAME.py"
 fi
 export db_name=$(ynh_sanitize_dbid $app)
 export port=$(ynh_find_port 8069)
@@ -39,14 +39,29 @@ ynh_webpath_register $app $domain "/"
 #=================================================
 function setup_files() {
    
-    ynh_setup_source $final_path/$APPNAME $odoo_version
+    ynh_setup_source $final_path/$APPNAME $app_version
+
+    # Remove Odoo references to avoid trademark issue
+    if [ -d $final_path/$APPNAME/$FORKNAME ]; then
+        python_app=$final_path/$APPNAME/$FORKNAME
+    else
+        python_app=$final_path/$APPNAME/openerp
+    fi
+    find $final_path/$APPNAME -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/Powered by <a[^>]*>Odoo<\/a>//g' {} \;
+    find $final_path/$APPNAME -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/<a[^>]*>Powered by <[^>]*>Odoo<\/[^>]*><\/a>//g' {} \;
+    find $final_path/$APPNAME -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/Powered by <[^>]*>Odoo<\/[^>]*>//g' {} \;
+    find $final_path/$APPNAME -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/Powered by <[^>]*><img[^>]*Odoo[^>]*><\/a>//g' {} \;
+    sed -i 's/<a[^>]*>My Odoo.com account<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
+    sed -i 's/<a[^>]*>Documentation<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
+    sed -i 's/<a[^>]*>Support<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
+    cp ../conf/logo_type.png  $python_app/addons/base/static/img/logo_white.png
     mkdir -p $final_path/custom-addons
     chown -R $app:$app $final_path
     ynh_configure server.conf $conf_file
     chown $app:$app $conf_file
 
     # Autoinstall the LDAP auth module
-    if ls $final_path/$APPNAME/$APPNAME-bin > /dev/null ; then
+    if ls $final_path/$APPNAME/$FORKNAME-bin > /dev/null ; then
         ynh_replace_string "^{$" "{'auto_install': True," ${final_path}/$APPNAME/addons/auth_ldap/__manifest__.py
     else
         ynh_replace_string "'auto_install': False" "'auto_install': True" ${final_path}/$APPNAME/addons/auth_ldap/__openerp__.py
@@ -55,7 +70,6 @@ function setup_files() {
     touch /var/log/$app.log
     chown $app:$app /var/log/$app.log
 
-    ynh_configure_nginx
 }
 
 function setup_database() {
@@ -91,13 +105,14 @@ self.company_id.ldaps.create({
 self.env.cr.commit()
 "
 }
-ynh_save_args domain odoo_version oca lang tz final_path conf_file db_name port port_chat
+ynh_save_args domain app_version oca lang tz final_path conf_file db_name port port_chat
 ynh_psql_test_if_first_run
 ynh_psql_setup_db $db_name $db_name
 export db_pass=$(ynh_app_setting_get $app psqlpwd)
 ynh_system_user_create $app $final_path
 setup_files
 install_dependencies
+ynh_configure_nginx
 add_services
 setup_database
 ssowat_and_restart

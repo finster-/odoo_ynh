@@ -18,7 +18,7 @@ source _common.sh
 # Retrieve arguments
 export app=$YNH_APP_INSTANCE_NAME
 export domain=$(ynh_app_setting_get "$app" domain)
-export odoo_version=$(ynh_app_setting_get "$app" odoo_version)
+export app_version=$(ynh_app_setting_get "$app" app_version)
 export is_master=$(ynh_app_setting_get "$app" is_master)
 export oca=$(ynh_app_setting_get "$app" oca)
 export port=$(ynh_app_setting_get $app port)
@@ -53,10 +53,10 @@ ynh_abort_if_errors
 # Zamentur version https://github.com/zamentur/odoo_ynh/commit/cdeb9afbf218431781f752dedfbf4247afbd5b44
 if ynh_version_le "9.0-0" ; then
     # set new args
-    odoo_version=${odoo_version:-$(ynh_app_setting_get "$app" version)}
+    app_version=${app_version:-$(ynh_app_setting_get "$app" version)}
     port=${port:-8069}
     oca=${oca:-false}
-    ynh_save_args odoo_version oca is_master port
+    ynh_save_args app_version oca is_master port
 
     # Install official debian package
     install_dependencies
@@ -69,7 +69,7 @@ if ynh_version_le "11.0-1" ; then
 fi
 
 ynh_system_user_create $app
-ynh_setup_source "$final_path/$APPNAME" $odoo_version
+ynh_setup_source "$final_path/$APPNAME" $app_version
 mkdir -p $final_path/custom-addons
 chown -R $app:$app $final_path
 ynh_configure server.conf $conf_file

@@ -2,7 +2,8 @@
 # Common variables
 #
 
-export APPNAME="odoo"
+export APPNAME="libreerp"
+export FORKNAME="odoo"
 DEPENDENCIES="curl postgresql xfonts-75dpi xfonts-base wkhtmltopdf node-less python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip python3-dev python3-venv python3-wheel libxslt-dev libzip-dev python3-setuptools python-virtualenv python-wheel python-setuptools libjpeg-dev zlib1g-dev"
 
 # Install dependencies
@@ -15,7 +16,7 @@ function install_dependencies() {
         ynh_setup_source /usr/
     fi
     pushd $final_path
-    if grep "python3" $final_path/$APPNAME/$APPNAME-bin ; then
+    if grep "python3" $final_path/$APPNAME/$FORKNAME-bin ; then
         python3 -m venv venv
         venv/bin/pip3 install wheel
         venv/bin/pip3 install -r $APPNAME/requirements.txt
