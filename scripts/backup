@@ -6,6 +6,7 @@ set -eu
 source /usr/share/yunohost/helpers
 #source _future.sh
 source ../settings/scripts/_common.sh
+ynh_abort_if_errors
 
 app=$YNH_APP_INSTANCE_NAME
 domain=$(ynh_app_setting_get "$app" domain)

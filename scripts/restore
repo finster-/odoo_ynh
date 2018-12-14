@@ -15,6 +15,8 @@ export oca=$(ynh_app_setting_get $app oca)
 export port=$(ynh_app_setting_get $app port)
 export port_chat=$(ynh_app_setting_get $app port_chat)
 export db_name=$(ynh_app_setting_get $app db_name)
+export db_pass=$(ynh_app_setting_get $app psqlpwd)
+export final_path=$(ynh_app_setting_get $app final_path)
 export is_public=0
 
 #=================================================
@@ -39,11 +41,11 @@ function restore_database () {
     su -c "psql $app" postgres < ./dump.sql
 }
 
-ynh_psql_test_if_first_run
-ynh_psql_setup_db $db_name $db_name $db_pass
 ynh_system_user_create $app $final_path
 restore_files
 install_dependencies
+ynh_psql_test_if_first_run
+ynh_psql_setup_db $db_name $db_name $db_pass
 add_services
 restore_database
 ssowat_and_restart
