@@ -10,47 +10,19 @@ app=$YNH_APP_INSTANCE_NAME
 
 # Retrieve app settings
 domain=$(ynh_app_setting_get "$app" domain)
-odoo_version=$(ynh_app_setting_get "$app" odoo_version)
-if [ "$odoo_version" = "" ]; then
-    exit 0
-fi
+final_path=$(ynh_app_setting_get "$app" final_path)
 database=${domain//./-}
-is_master=$(ynh_app_setting_get "$app" is_master)
 
-define_paths
+yunohost service stop $app
+yunohost service remove $app
+ynh_psql_remove_db $app $app
 
-yunohost service stop odoo
-list=$(yunohost app list --installed | grep odoo)
-# If removing master instance, remove Odoo.
-if [ $(echo $list | wc -l) = 1 ]; then
-    rm -f /etc/apt/sources.list.d/odoo.list
-    apt-get update
-	yunohost service remove odoo
-    ynh_psql_drop_db $APPNAME
-    #ynh_psql_drop_user $APPNAME
-else
-    # Set another app as master
-    if [ "$is_master" = "true" ]; then
-        for instance in $list; do
-            if [ "$instance" != "$app" ]; then
-                ynh_app_setting_set "$instance" is_master "true"
-                break
-            fi
-        done
-        is_master="false"
-    fi
-fi
+ynh_secure_remove "$final_path"
 
 ynh_remove_app_dependencies
 
-# Remove database
-ynh_psql_drop_db $database
+ynh_system_user_delete $app
 
-if [ "$is_master" = "false" ]; then
-    yunohost service start odoo
-fi
-
-# Remove NGINX conf
-ynh_rm_nginx_conf
+ynh_remove_nginx_config
 
 ynh_del_swap

@@ -46,11 +46,6 @@ ynh_clean_setup () {
 # Exit if an error occurs during the execution of the script
 ynh_abort_if_errors
 
-#=================================================
-# CHECK THE PATH
-#=================================================
-
-path_url=$(ynh_normalize_url_path $path_url)	# Vérifie et corrige la syntaxe du path.
 
 #=================================================
 # STEP Migrations
@@ -59,13 +54,6 @@ path_url=$(ynh_normalize_url_path $path_url)	# Vérifie et corrige la syntaxe du
 if ynh_version_le "9.0-0" ; then
     # set new args
     odoo_version=${odoo_version:-$(ynh_app_setting_get "$app" version)}
-    if [ "$is_master" = "" ]; then
-        if [ "$(ynh_app_setting_get "$app" instance)" = "master" ];then
-            is_master="true"
-        else
-            is_master="false"
-        fi
-    fi
     port=${port:-8069}
     oca=${oca:-false}
     ynh_save_args odoo_version oca is_master port
@@ -80,8 +68,15 @@ if ynh_version_le "11.0-1" ; then
     ynh_save_args major_upgrade
 fi
 
+ynh_system_user_create $app
+ynh_setup_source "$final_path/$APPNAME" $odoo_version
+mkdir -p $final_path/custom-addons
+chown -R $app:$app $final_path
+ynh_configure server.conf $conf_file
+chown $app:$app $conf_file
+    
+touch /var/log/$app.log
+chown $app:$app /var/log/$app.log
 
-# Upgrade official package
-apt-get install odoo -y -qq
-
-
+install_dependencies
+service $app restart

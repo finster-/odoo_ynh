@@ -6,66 +6,65 @@ source /usr/share/yunohost/helpers
 source _future.sh
 source _common.sh
 
-ynh_trap_on
+ynh_abort_if_errors
 
 # Arguments from manifest
 export app=$YNH_APP_INSTANCE_NAME
-export domain=$YNH_APP_ARG_DOMAIN
+ynh_export domain oca admin_password lang tz 
 export odoo_version=$YNH_APP_ARG_VERSION
-export oca=$YNH_APP_ARG_OCA
-export admin_password=$YNH_APP_ARG_ADMIN_PASSWORD
-export lang=$YNH_APP_ARG_LANG
-export tz=$YNH_APP_ARG_TZ
 export is_public=0
+export final_path="/var/www/$app"
+export conf_file=/etc/$app/main.conf
+export bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$APPNAME-bin"
+if [ "$odoo_version" = "9" ]; then
+    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$APPNAME.py"
+fi
+if [ "$odoo_version" = "8" ]; then
+    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$APPNAME.py"
+fi
+export db_name=$(ynh_sanitize_dbid $app)
+export port=$(ynh_find_port 8069)
+export port_chat=$(ynh_find_port 8072)
 
 #=================================================
 # CHECK IF THE APP CAN BE INSTALLED WITH THIS ARGS
 #=================================================
-ynh_check_var "$app" "app name not set"
-ynh_webpath_available "$domain" "/"
-check_odoo_version
-define_paths
-define_is_master
-define_port
-define_dbpass
+test ! -e "$final_path" || ynh_die "This path already contains a folder"
+ynh_webpath_available $domain "/"
+ynh_webpath_register $app $domain "/"
 
 
 #=================================================
 # SETUP THE APP BY MODIFYING THE SYSTEM
 #=================================================
 function setup_files() {
-    # Set admin password
-    export database=${domain//./-}
-    ynh_configure openerp-server.conf $conf_file
-    chown odoo:odoo $conf_file
+   
+    ynh_setup_source $final_path/$APPNAME $odoo_version
+    mkdir -p $final_path/custom-addons
+    chown -R $app:$app $final_path
+    ynh_configure server.conf $conf_file
+    chown $app:$app $conf_file
 
     # Autoinstall the LDAP auth module
-    if [ $(echo "$odoo_version >= 10" | bc) -ne 0 ]; then
-        ynh_replace_string "^{$" "{'auto_install': True," ${source_path}addons/auth_ldap/__manifest__.py
+    if ls $final_path/$APPNAME/$APPNAME-bin > /dev/null ; then
+        ynh_replace_string "^{$" "{'auto_install': True," ${final_path}/$APPNAME/addons/auth_ldap/__manifest__.py
     else
-        ynh_replace_string "'auto_install': False" "'auto_install': True" ${source_path}addons/auth_ldap/__openerp__.py
+        ynh_replace_string "'auto_install': False" "'auto_install': True" ${final_path}/$APPNAME/addons/auth_ldap/__openerp__.py
     fi
-
-    # Fix peer authentification issue
-    sed -i '/local\s*all\s*all\s*peer/i \
-    local all odoo password' /etc/postgresql/9.*/main/pg_hba.conf
+    
+    touch /var/log/$app.log
+    chown $app:$app /var/log/$app.log
 
     ynh_configure_nginx
 }
 
 function setup_database() {
 
-    # Setup database: not working
-    database=${domain//./-}
-
-    if [ $(echo "$odoo_version <= 8" | bc) -ne 0 ]; then
-        su -c "createdb -O $APPNAME $database" -  postgres
-    fi
     # Load translation
-    sudo -u odoo $bin_file -c $conf_file --stop-after-init -i auth_ldap -d $database
-    sudo -u odoo $bin_file -c $conf_file --stop-after-init -d $database --load-language $lang
+    sudo -u $app $bin_file -c $conf_file --stop-after-init -i auth_ldap -d $app
+    sudo -u $app $bin_file -c $conf_file --stop-after-init -d $app --load-language $lang
     # Configure language, timezone and ldap
-    sudo -u odoo $bin_file shell -c $conf_file -d $database <<< \
+    sudo -u $app $bin_file shell -c $conf_file -d $app <<< \
 "
 self.env['res.users'].search([['login', '=', 'admin']])[0].write({'password': '$admin_password'})
 self.env.cr.commit()
@@ -92,12 +91,13 @@ self.company_id.ldaps.create({
 self.env.cr.commit()
 "
 }
-
-ynh_webpath_register "$app" "$domain" "/"
-ynh_save_args domain odoo_version oca lang tz is_master port
-install_dependencies
+ynh_save_args domain odoo_version oca lang tz final_path conf_file db_name port port_chat
+ynh_psql_test_if_first_run
+ynh_psql_setup_db $db_name $db_name
+export db_pass=$(ynh_app_setting_get $app psqlpwd)
+ynh_system_user_create $app $final_path
 setup_files
-create_general_db
+install_dependencies
 add_services
 setup_database
 ssowat_and_restart

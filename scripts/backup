@@ -9,27 +9,18 @@ source ../settings/scripts/_common.sh
 
 app=$YNH_APP_INSTANCE_NAME
 domain=$(ynh_app_setting_get "$app" domain)
-odoo_version=$(ynh_app_setting_get "$app" odoo_version)
-
-define_paths
+final_path=$(ynh_app_setting_get "$app" final_path)
 
 # Backup sources & data
-ynh_backup "${source_path}addons" "$1${source_path}addons"
-mkdir -p /opt/odoo-oca-addons
-ynh_backup "/opt/odoo-oca-addons" "$1/opt/odoo-oca-addons"
+ynh_backup "${final_path}/$APPNAME"
+ynh_backup "${final_path}/custom-addons"
+ynh_backup "${final_path}/.local"
 
 # Backup configuration
-ynh_backup "$conf_file" "$1$conf_file"
+ynh_backup "$conf_file"
 
 # Copy NGINX configuration
-ynh_backup "/etc/nginx/conf.d/${domain}.d/${app}.conf" "etc/nginx/conf.d/${domain}.d/${app}.conf"
+ynh_backup "/etc/nginx/conf.d/${domain}.d/${app}.conf"
 
-# Save postgresql conf
-if is_jessie ; then
-    ynh_backup "/etc/postgresql/9.4/main/pg_hba.conf" "etc/postgresql/9.4/main/pg_hba.conf"
-else
-    ynh_backup "/etc/postgresql/9.6/main/pg_hba.conf" "etc/postgresql/9.6/main/pg_hba.conf"
-fi
 # Copy database
-database=${domain//./-}
-sudo su -c "pg_dump $database" postgres > ./dump.sql
+sudo su -c "pg_dump $app" postgres > ./dump.sql

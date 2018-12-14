@@ -8,16 +8,16 @@
   },
   "maintainer": {
     "name": "ljf",
-    "email": "ljf+ynh-odoo@reflexlibre.net"
+    "email": "ljf+odoo_ynh@reflexlibre.net"
   },
   "previous_maintainers": {
     "name": "scith"
   },
-  "version": "11.0-1",
+  "version": "12.0-0",
   "url": "https://www.odoo.com",
   "license": "LGPL-3.0,AGPL-3.0",
   "requirements": {
-    "yunohost": ">= 2.6.0"
+    "yunohost": ">= 3.3.0"
   },
   "multi_instance": true,
   "services": [
@@ -38,8 +38,8 @@
         "en": "Which version of Odoo do you want to install?",
         "fr": "Quelle version d'Odoo souhaitez-vous installer ?"
       },
-      "choices": ["8.0", "9.0", "10.0", "11.0", "12.0"],
-      "default": "12.0"
+      "choices": ["8", "9", "10", "11", "12"],
+      "default": "12"
     }, {
       "name": "oca",
       "type": "boolean",
