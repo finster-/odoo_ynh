@@ -17,6 +17,7 @@ export port_chat=$(ynh_app_setting_get $app port_chat)
 export db_name=$(ynh_app_setting_get $app db_name)
 export db_pass=$(ynh_app_setting_get $app psqlpwd)
 export final_path=$(ynh_app_setting_get $app final_path)
+export conf_file=$(ynh_app_setting_get $app conf_file)
 export is_public=0
 
 #=================================================
