@@ -32,6 +32,7 @@ ynh_sso_access () {
 ynh_configure () {
     local TEMPLATE=$1
     local DEST=$2
+    mkdir -p "$(dirname $DEST)"
     ynh_render_template "${YNH_CWD}/../conf/$TEMPLATE.j2" "$DEST"
 }
 
