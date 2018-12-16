@@ -6,10 +6,7 @@ export APPNAME="libreerp"
 export FORKNAME="odoo"
 DEPENDENCIES="curl postgresql xfonts-75dpi xfonts-base wkhtmltopdf node-less python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip python3-dev python3-venv python3-wheel libxslt-dev libzip-dev python3-setuptools python-virtualenv python-wheel python-setuptools libjpeg-dev zlib1g-dev"
 
-function setup_files() {
-   
-    ynh_setup_source $final_path/$APPNAME $app_version
-
+function debranding() {
     # Remove Odoo references to avoid trademark issue
     if [ -d $final_path/$APPNAME/$FORKNAME ]; then
         python_app=$final_path/$APPNAME/$FORKNAME
@@ -24,20 +21,28 @@ function setup_files() {
     sed -i 's/<a[^>]*>Documentation<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
     sed -i 's/<a[^>]*>Support<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
     cp ../conf/logo_type.png  $python_app/addons/base/static/img/logo_white.png
+
+}
+function setup_files() {
+   
+    ynh_setup_source $final_path/$APPNAME $app_version
+    debranding
     mkdir -p $final_path/custom-addons
     chown -R $app:$app $final_path
-    ynh_configure server.conf $conf_file
-    chown $app:$app $conf_file
-
-    # Autoinstall the LDAP auth module
-    if ls $final_path/$APPNAME/$FORKNAME-bin > /dev/null ; then
-        ynh_replace_string "^{$" "{'auto_install': True," ${final_path}/$APPNAME/addons/auth_ldap/__manifest__.py
-    else
-        ynh_replace_string "'auto_install': False" "'auto_install': True" ${final_path}/$APPNAME/addons/auth_ldap/__openerp__.py
-    fi
-    
     touch /var/log/$app.log
     chown $app:$app /var/log/$app.log
+    
+    if [ ! -f $conf_file ]; then
+        ynh_configure server.conf $conf_file
+        chown $app:$app $conf_file
+
+        # Autoinstall the LDAP auth module
+        if ls $final_path/$APPNAME/$FORKNAME-bin > /dev/null ; then
+            ynh_replace_string "^{$" "{'auto_install': True," ${final_path}/$APPNAME/addons/auth_ldap/__manifest__.py
+        else
+            ynh_replace_string "'auto_install': False" "'auto_install': True" ${final_path}/$APPNAME/addons/auth_ldap/__openerp__.py
+        fi
+    fi 
 
 }
 # Install dependencies
@@ -47,7 +52,14 @@ function install_dependencies() {
 
     if ! wkhtmltopdf --version | grep "wkhtmltopdf 0.12.4 (with patched qt)"; then
         # The debian package has a bug so we deploy a more recent version
-        ynh_setup_source /usr/
+        if [ -f '../manifest.json' ] ; then
+            ynh_setup_source /usr/
+        else
+            OLD_YNH_CWD=$YNH_CWD
+            YNH_CWD=$YNH_CWD/../settings/conf
+            ynh_setup_source /usr/
+            YNH_CWD=$OLD_YNH_CWD
+        fi
     fi
     pushd $final_path
     if grep "python3" $final_path/$APPNAME/$FORKNAME-bin ; then

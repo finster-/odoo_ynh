@@ -30,7 +30,6 @@ export port_chat=$(ynh_find_port 8072)
 # CHECK IF THE APP CAN BE INSTALLED WITH THIS ARGS
 #=================================================
 test ! -e "$final_path" || ynh_die "This path already contains a folder"
-ynh_webpath_available $domain "/"
 ynh_webpath_register $app $domain "/"
 
 

@@ -19,17 +19,18 @@ source _common.sh
 export app=$YNH_APP_INSTANCE_NAME
 export domain=$(ynh_app_setting_get "$app" domain)
 export app_version=$(ynh_app_setting_get "$app" app_version)
-export is_master=$(ynh_app_setting_get "$app" is_master)
 export oca=$(ynh_app_setting_get "$app" oca)
 export port=$(ynh_app_setting_get $app port)
+export port_chat=$(ynh_app_setting_get $app port_chat)
 export is_public=0
-export major_upgrade=$(ynh_app_setting_get $app major_upgrade)
+export final_path=$(ynh_app_setting_get $app final_path)
+export conf_file=$(ynh_app_setting_get $app conf_file)
 
 #=================================================
 # CHECK VERSION
 #=================================================
 
-ynh_abort_if_up_to_date
+ynh_check_app_version_changed
 
 #=================================================
 # STANDARD UPGRADE STEPS
@@ -50,24 +51,6 @@ ynh_abort_if_errors
 #=================================================
 # STEP Migrations
 #=================================================
-# Zamentur version https://github.com/zamentur/odoo_ynh/commit/cdeb9afbf218431781f752dedfbf4247afbd5b44
-if ynh_version_le "9.0-0" ; then
-    # set new args
-    app_version=${app_version:-$(ynh_app_setting_get "$app" version)}
-    port=${port:-8069}
-    oca=${oca:-false}
-    ynh_save_args app_version oca is_master port
-
-    # Install official debian package
-    install_dependencies
-fi
-
-if ynh_version_le "11.0-1" ; then
-    # By default we don't upgrade to major version
-    major_upgrade=${major_upgrade:-0}
-    ynh_save_args major_upgrade
-fi
-
 ynh_system_user_create $app
 setup_files
 install_dependencies

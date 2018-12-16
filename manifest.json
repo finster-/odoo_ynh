@@ -13,7 +13,7 @@
   "previous_maintainers": {
     "name": "scith"
   },
-  "version": "12.0-1",
+  "version": "12.0-5",
   "url": "https://github.com/YunoHost-Apps/libreerp_ynh",
   "license": "LGPL-3.0,AGPL-3.0",
   "requirements": {
