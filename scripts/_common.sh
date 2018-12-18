@@ -21,7 +21,7 @@ function debranding() {
     sed -i 's/<a[^>]*>Documentation<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
     sed -i 's/<a[^>]*>Support<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
     cp ../conf/logo_type.png  $python_app/addons/base/static/img/logo_white.png
-    cp ../conf/favicon.ico  $python_app/addons/web/static/src/img/favicon.ico
+    cp ../conf/favicon.ico  $final_path/$APPNAME/addons/web/static/src/img/favicon.ico
 
 }
 function setup_files() {
