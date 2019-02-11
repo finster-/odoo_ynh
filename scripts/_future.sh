@@ -17,15 +17,15 @@ ynh_export () {
 ynh_save_args () {
     for var in $@;
     do
-        ynh_app_setting_set -a $app -k $var -v ${!var}
+        ynh_app_setting_set $app $var ${!var}
     done
 }
 
 ynh_sso_access () {
-    ynh_app_setting_set -a $app -k unprotected_uris -v "/"
+    ynh_app_setting_set $app unprotected_uris "/"
 
     if [[ $is_public -eq 0 ]]; then
-        ynh_app_setting_set -a $app -k protected_uris -v "$1"
+        ynh_app_setting_set $app protected_uris "$1"
     fi
     sudo yunohost app ssowatconf
 }
