@@ -71,7 +71,7 @@ self.env.cr.commit()
 "
 }
 ynh_save_args domain app_version oca lang tz final_path conf_file db_name port port_chat
-ynh_system_user_create $app $final_path
+ynh_system_user_create -u $app -h $final_path
 export db_pass=$(ynh_string_random)
 setup_files
 install_dependencies
