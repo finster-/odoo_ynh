@@ -6,7 +6,7 @@
         oca=0
         admin_password="testpassw0rD"
 		lang="en_US"
-        tz="Europe/Paris"
+        tz="Etc/GMT"
 	; Checks
 		pkg_linter=1
 		setup_sub_dir=0
