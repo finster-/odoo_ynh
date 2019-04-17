@@ -25,6 +25,7 @@ export port_chat=$(ynh_app_setting_get $app port_chat)
 export is_public=0
 export final_path=$(ynh_app_setting_get $app final_path)
 export conf_file=$(ynh_app_setting_get $app conf_file)
+export preinstall=0
 
 #=================================================
 # CHECK VERSION
