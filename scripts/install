@@ -25,6 +25,7 @@ fi
 export db_name=$(ynh_sanitize_dbid $app)
 export port=$(ynh_find_port 8069)
 export port_chat=$(ynh_find_port 8072)
+export preinstall=0
 
 #=================================================
 # CHECK IF THE APP CAN BE INSTALLED WITH THIS ARGS
@@ -38,17 +39,27 @@ ynh_webpath_register $app $domain "/"
 #=================================================
 
 function setup_database() {
-
+    export preinstall=1
+    ynh_configure server.conf $conf_file
+    chown $app:$app $conf_file
     # Load translation
+    #param=" --without-demo True --addons-path $final_path/$APPNAME/addons --db_user $app --db_password $db_pass --db_host 127.0.0.1 --db_port 5432 --db-filter '^$app\$' -d $app "
+    param=" -c $conf_file -d $app "
     sudo -u $app $bin_file -c $conf_file --stop-after-init -i auth_ldap -d $app
-    sudo -u $app $bin_file -c $conf_file --stop-after-init -d $app --load-language $lang
+    sudo -u $app $bin_file -c $conf_file --stop-after-init --load-language $lang -d $app
     # Configure language, timezone and ldap
     sudo -u $app $bin_file shell -c $conf_file -d $app <<< \
 "
 self.env['res.users'].search([['login', '=', 'admin']])[0].write({'password': '$admin_password'})
 self.env.cr.commit()
+"
+    sudo -u $app $bin_file shell -c $conf_file -d $app <<< \
+"
 self.write({'tz':'$tz','lang':'$lang'})
 self.env.cr.commit()
+"
+    sudo -u $app $bin_file shell -c $conf_file -d $app <<< \
+"
 template=env['res.users'].create({
   'login':'template',
   'password':'',
@@ -69,6 +80,9 @@ self.company_id.ldaps.create({
 })
 self.env.cr.commit()
 "
+    export preinstall=0
+    ynh_configure server.conf $conf_file
+    chown $app:$app $conf_file
 }
 ynh_save_args domain app_version oca lang tz final_path conf_file db_name port port_chat
 ynh_system_user_create -u $app -h $final_path
