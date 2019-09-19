@@ -35,11 +35,19 @@
     }, {
       "name": "version",
       "choices": ["8", "9", "10", "11", "12"],
-      "default": "12"
+      "default": "12",
+      "ask": {
+        "en": "Choose the version you want",
+        "fr": "Choisissez la version désirée"
+      }
     }, {
       "name": "oca",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "ask": {
+        "en": "Do you want to setup OCA instead of LibreERP ? (not yet implemented)",
+        "fr": "Désirez vous installer OCA à la place des sources de LibreERP (pas encore implémenté)"
+      }
     }, {
       "name": "admin_password",
       "type": "password",
