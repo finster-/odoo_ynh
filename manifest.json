@@ -65,6 +65,10 @@
       "default": "en_US"
     }, {
       "name": "tz",
+      "ask": {
+        "en": "Choose a timezone",
+        "fr": "Choisissez un fuseau horaire"
+      },
       "default": "Etc/UTC"
     }]
   }
