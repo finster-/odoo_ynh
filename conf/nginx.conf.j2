@@ -4,6 +4,8 @@ location / {
         }
         try_files $uri @{{ app }};
 }
+   client_max_body_size 50M; 
+
 location @{{ app }} {
     proxy_pass http://127.0.0.1:{{ port }};
     proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
