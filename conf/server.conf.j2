@@ -1,22 +1,18 @@
 [options]
 ; This is the password that allows database operations:
 without_demo = all
-admin_passwd = {{ admin_password }}
+admin_passwd = __ADMIN_PASSWORD__
 db_host = localhost
 db_port = 5432
-db_user = {{ db_name }}
-db_password = {{ db_pass }}
-{% if preinstall == '1' %}
-dbfilter = ^{{ db_name }}$
-{% else %}
-db_name = {{ db_name }}
-{% if app_version > 9 %}dbfilter = False{% endif %}
-list_db = False
-{% endif %}
-addons_path = {{ final_path }}/{{ APPNAME }}/addons,{{ final_path }}/custom-addons
+db_user = __DB_NAME__
+db_password = __DB_PASS__
+__CONTENT__
+__CONTENT2__
+__CONTENT3__
+addons_path = __FINAL_PATH__/__APPNAME__/addons,__FINAL_PATH__/custom-addons
 proxy_mode = true
-logfile = /var/log/{{ app }}.log
+logfile = /var/log/__APP__.log
 xmlrpc_interface = 127.0.0.1
 netrpc_interface = 127.0.0.1
-xmlrpc_port = {{ port }}
-longpolling_port = {{ port_chat }}
+xmlrpc_port = __PORT__
+longpolling_port = __PORT_CHAT__

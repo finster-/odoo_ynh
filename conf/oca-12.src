@@ -1,0 +1,5 @@
+SOURCE_URL=https://github.com/OCA/OCB/archive/4df6b0b164c6f384fdb7df40e51e80780572273a.tar.gz
+SOURCE_SUM=e064dcd121ca207cbfa18c5f5f63c394ee6a1ca03f9ebbd6b88e6a62dda6bca0
+SOURCE_FILENAME=odoo-12.tar.gz
+SOURCE_FORMAT=tar.gz
+SOURCE_SUM_PRG=sha256sum
