@@ -46,6 +46,7 @@ fi
 if [ "$app_version" = "8" ]; then
     bin_file="$final_path/venv/bin/python $final_path/$appname/$FORKNAME.py"
 fi
+export preinstall=0
 
 #=================================================
 # CHECK IF THE APP CAN BE RESTORED
