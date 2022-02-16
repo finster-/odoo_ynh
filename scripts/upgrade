@@ -21,7 +21,6 @@ export app_version=$(ynh_app_setting_get --app=$app --key=app_version)
 export oca=$(ynh_app_setting_get --app=$app --key=oca)
 export port=$(ynh_app_setting_get --app=$app --key=port)
 export port_chat=$(ynh_app_setting_get --app=$app --key=port_chat)
-export is_public=0
 export final_path=$(ynh_app_setting_get --app=$app --key=final_path)
 export conf_file=$(ynh_app_setting_get --app=$app --key=conf_file)
 export preinstall=0

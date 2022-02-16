@@ -38,7 +38,6 @@ db_user=$db_name
 export db_pass=$(ynh_app_setting_get --app=$app --key=psqlpwd)
 export final_path=$(ynh_app_setting_get --app=$app --key=final_path)
 export conf_file=$(ynh_app_setting_get --app=$app --key=conf_file)
-export is_public=0
 export bin_file="$final_path/venv/bin/python $final_path/$appname/$FORKNAME-bin"
 if [ "$app_version" = "9" ]; then
     bin_file="$final_path/venv/bin/python $final_path/$appname/$FORKNAME.py"

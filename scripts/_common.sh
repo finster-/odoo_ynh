@@ -108,15 +108,6 @@ self.env.cr.commit()
     chown $app:$app $conf_file
 }
 
-ynh_sso_access () {
-    ynh_app_setting_set $app unprotected_uris "/"
-
-    if [[ $is_public -eq 0 ]]; then
-        ynh_app_setting_set $app protected_uris "$1"
-    fi
-    sudo yunohost app ssowatconf
-}
-
 ynh_configure () {
     local TEMPLATE=$1
     local DEST=$2
