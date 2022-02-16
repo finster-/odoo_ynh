@@ -3,11 +3,11 @@
     "id": "libreerp",
     "packaging_format": 1,
     "description": {
-        "en": "LibreERP is a suite of business apps (ERP: CRM, Accounting, Point of Sale, HR, Purchases...).",
-        "fr": "LibreERP est une collection d'apps de gestion d'entreprise (ERP : CRM, Comptabilité, Point de Vente, RH, Achats, ...)."
+        "en": "Suite of business apps (ERP: CRM, Accounting, Point of Sale, HR, Purchases...).",
+        "fr": "Une collection d'apps de gestion d'entreprise (ERP : CRM, Comptabilité, Point de Vente, RH, Achats, ...)."
     },
     "version": "12.0~ynh6",
-    "url": "https://github.com/YunoHost-Apps/libreerp_ynh",
+    "url": "https://odoo.com",
     "upstream": {
         "license": "LGPL-3.0-only",
         "website": "https://odoo.com",
@@ -39,12 +39,13 @@
             },
             {
                 "name": "version",
-                "choices": ["11", "12", "14"],
-                "default": "14",
+                "type": "string",
                 "ask": {
                     "en": "Choose the version you want",
                     "fr": "Choisissez la version désirée"
-                }
+                },
+                "choices": ["11", "12", "14"],
+                "default": "14"
             },
             {
                 "name": "oca",
@@ -65,6 +66,7 @@
             },
             {
                 "name": "lang",
+                "type": "string",
                 "ask": {
                     "en": "Choose the application language",
                     "fr": "Choisissez la langue de l'application"
@@ -74,6 +76,7 @@
             },
             {
                 "name": "tz",
+                "type": "string",
                 "ask": {
                     "en": "Choose a timezone",
                     "fr": "Choisissez un fuseau horaire"
