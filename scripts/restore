@@ -19,13 +19,14 @@ export db_pass=$(ynh_app_setting_get $app psqlpwd)
 export final_path=$(ynh_app_setting_get $app final_path)
 export conf_file=$(ynh_app_setting_get $app conf_file)
 export is_public=0
-export bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$FORKNAME-bin"
+export bin_file="$final_path/venv/bin/python $final_path/$appname/$FORKNAME-bin"
 if [ "$app_version" = "9" ]; then
-    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$FORKNAME.py"
+    bin_file="$final_path/venv/bin/python $final_path/$appname/$FORKNAME.py"
 fi
 if [ "$app_version" = "8" ]; then
-    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$FORKNAME.py"
+    bin_file="$final_path/venv/bin/python $final_path/$appname/$FORKNAME.py"
 fi
+export preinstall=0
 
 #=================================================
 # CHECK IF THE APP CAN BE RESTORED

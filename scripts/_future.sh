@@ -32,11 +32,26 @@ ynh_sso_access () {
 ynh_configure () {
     local TEMPLATE=$1
     local DEST=$2
+    content=""
+    content2=""
+    content3=""
+    if [[ $preinstall == '1' ]]
+    then
+    	content="dbfilter = $db_name"
+	else
+		content="db_name = $db_name"
+		if [[ $app_version > 9 ]]
+		then
+			content2="dbfilter = False"
+		fi
+		content3="list_db = False"
+	fi
+
     mkdir -p "$(dirname $DEST)"
     if [ -f '../manifest.json' ] ; then
-        ynh_render_template "${YNH_CWD}/../conf/$TEMPLATE.j2" "$DEST"
+        ynh_add_config "${YNH_CWD}/../conf/$TEMPLATE.j2" "$DEST"
     else
-        ynh_render_template "${YNH_CWD}/../settings/conf/$TEMPLATE.j2" "$DEST"
+        ynh_add_config "${YNH_CWD}/../settings/conf/$TEMPLATE.j2" "$DEST"
     fi
 }
 

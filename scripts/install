@@ -15,12 +15,12 @@ export app_version=$YNH_APP_ARG_VERSION
 export is_public=0
 export final_path="/var/www/$app"
 export conf_file=/etc/$app/main.conf
-export bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$FORKNAME-bin"
+export bin_file="$final_path/venv/bin/python3 $final_path/$appname/$FORKNAME-bin"
 if [ "$app_version" = "9" ]; then
-    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$FORKNAME.py"
+    bin_file="$final_path/venv/bin/python3 $final_path/$appname/$FORKNAME.py"
 fi
 if [ "$app_version" = "8" ]; then
-    bin_file="$final_path/venv/bin/python $final_path/$APPNAME/$FORKNAME.py"
+    bin_file="$final_path/venv/bin/python3 $final_path/$appname/$FORKNAME.py"
 fi
 export db_name=$(ynh_sanitize_dbid $app)
 export port=$(ynh_find_port 8069)
@@ -43,8 +43,9 @@ function setup_database() {
     ynh_configure server.conf $conf_file
     chown $app:$app $conf_file
     # Load translation
-    #param=" --without-demo True --addons-path $final_path/$APPNAME/addons --db_user $app --db_password $db_pass --db_host 127.0.0.1 --db_port 5432 --db-filter '^$app\$' -d $app "
+    #param=" --without-demo True --addons-path $final_path/$appname/addons --db_user $app --db_password $db_pass --db_host 127.0.0.1 --db_port 5432 --db-filter '^$app\$' -d $app "
     param=" -c $conf_file -d $app "
+    sudo -u $app $bin_file -c $conf_file --stop-after-init -i base -d $app
     sudo -u $app $bin_file -c $conf_file --stop-after-init -i auth_ldap -d $app
     sudo -u $app $bin_file -c $conf_file --stop-after-init --load-language $lang -d $app
     # Configure language, timezone and ldap

@@ -2,31 +2,35 @@
 # Common variables
 #
 
-export APPNAME="libreerp"
+export appname="libreerp"
 export FORKNAME="odoo"
-DEPENDENCIES="curl postgresql xfonts-75dpi xfonts-base wkhtmltopdf node-less python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip python3-dev python3-venv python3-wheel libxslt-dev libzip-dev python3-setuptools python-virtualenv python-wheel python-setuptools libjpeg-dev zlib1g-dev virtualenv libfreetype6-dev"
+DEPENDENCIES="curl postgresql xfonts-75dpi xfonts-base wkhtmltopdf node-less python3-dev gcc libldap2-dev libssl-dev libsasl2-dev python3-pip python3-dev python3-venv python3-wheel libxslt-dev libzip-dev python3-setuptools libjpeg-dev zlib1g-dev libfreetype6-dev libffi-dev libpq-dev"
 
 function debranding() {
     # Remove Odoo references to avoid trademark issue
-    if [ -d $final_path/$APPNAME/$FORKNAME ]; then
-        python_app=$final_path/$APPNAME/$FORKNAME
+    if [ -d $final_path/$appname/$FORKNAME ]; then
+        python_app=$final_path/$appname/$FORKNAME
     else
-        python_app=$final_path/$APPNAME/openerp
+        python_app=$final_path/$appname/openerp
     fi
-    find $final_path/$APPNAME -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/Powered by <a[^>]*>Odoo<\/a>//g' {} \;
-    find $final_path/$APPNAME -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/<a[^>]*>Powered by <[^>]*>Odoo<\/[^>]*><\/a>//g' {} \;
-    find $final_path/$APPNAME -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/Powered by <[^>]*>Odoo<\/[^>]*>//g' {} \;
-    find $final_path/$APPNAME -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/Powered by <[^>]*><img[^>]*Odoo[^>]*><\/a>//g' {} \;
-    sed -i 's/<a[^>]*>My Odoo.com account<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
-    sed -i 's/<a[^>]*>Documentation<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
-    sed -i 's/<a[^>]*>Support<\/a>//g' $final_path/$APPNAME/addons/web/static/src/xml/base.xml
+    find $final_path/$appname -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/Powered by <a[^>]*>Odoo<\/a>//g' {} \;
+    find $final_path/$appname -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/<a[^>]*>Powered by <[^>]*>Odoo<\/[^>]*><\/a>//g' {} \;
+    find $final_path/$appname -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/Powered by <[^>]*>Odoo<\/[^>]*>//g' {} \;
+    find $final_path/$appname -type f \( -iname '*.xml' -o -iname '*.po' \) -exec sed -i 's/Powered by <[^>]*><img[^>]*Odoo[^>]*><\/a>//g' {} \;
+    sed -i 's/<a[^>]*>My Odoo.com account<\/a>//g' $final_path/$appname/addons/web/static/src/xml/base.xml
+    sed -i 's/<a[^>]*>Documentation<\/a>//g' $final_path/$appname/addons/web/static/src/xml/base.xml
+    sed -i 's/<a[^>]*>Support<\/a>//g' $final_path/$appname/addons/web/static/src/xml/base.xml
     cp ../conf/logo_type.png  $python_app/addons/base/static/img/logo_white.png
-    cp ../conf/favicon.ico  $final_path/$APPNAME/addons/web/static/src/img/favicon.ico
+    cp ../conf/favicon.ico  $final_path/$appname/addons/web/static/src/img/favicon.ico
 
 }
 function setup_files() {
    
-    ynh_setup_source $final_path/$APPNAME $app_version
+    if [[ $oca -eq 0 ]]; then
+        ynh_setup_source $final_path/$appname $app_version
+    else
+        ynh_setup_source $final_path/$appname "oca-$app_version"
+    fi
     debranding
     mkdir -p $final_path/custom-addons
     chown -R $app:$app $final_path
@@ -38,10 +42,10 @@ function setup_files() {
         chown $app:$app $conf_file
 
         # Autoinstall the LDAP auth module
-        if ls $final_path/$APPNAME/$FORKNAME-bin > /dev/null ; then
-            ynh_replace_string "^{$" "{'auto_install': True," ${final_path}/$APPNAME/addons/auth_ldap/__manifest__.py
+        if ls $final_path/$appname/$FORKNAME-bin > /dev/null ; then
+            ynh_replace_string "^{$" "{'auto_install': True," ${final_path}/$appname/addons/auth_ldap/__manifest__.py
         else
-            ynh_replace_string "'auto_install': False" "'auto_install': True" ${final_path}/$APPNAME/addons/auth_ldap/__openerp__.py
+            ynh_replace_string "'auto_install': False" "'auto_install': True" ${final_path}/$appname/addons/auth_ldap/__openerp__.py
         fi
     fi 
 
@@ -63,14 +67,14 @@ function install_dependencies() {
         fi
     fi
     pushd $final_path
-    if grep "python3" $final_path/$APPNAME/$FORKNAME-bin ; then
+    if grep "python3" $final_path/$appname/$FORKNAME-bin ; then
         python3 -m venv venv
         venv/bin/pip3 install wheel
-        venv/bin/pip3 install -r $APPNAME/requirements.txt
+        venv/bin/pip3 install -r $appname/requirements.txt
     else
         virtualenv venv
         venv/bin/pip install wheel
-        venv/bin/pip install -r $APPNAME/requirements.txt
+        venv/bin/pip install -r $appname/requirements.txt
     fi
     popd
 }

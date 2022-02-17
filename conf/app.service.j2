@@ -1,16 +1,16 @@
 [Unit]
-Description={{ app }}
+Description=__APP__
 Requires=postgresql.service
 After=network.target postgresql.service
 
 [Service]
 Type=simple
-SyslogIdentifier={{ app }}
+SyslogIdentifier=__APP__
 PermissionsStartOnly=true
-User={{ app }}
-Group={{ app }}
+User=__APP__
+Group=__APP__
 Environment=PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
-ExecStart={{ bin_file }} --config {{ conf_file }} --logfile /var/log/{{ app }}.log
+ExecStart=__BIN_FILE__ --config __CONF_FILE__ --logfile /var/log/__APP__.log
 Restart=always
 RestartSec=3
 StandardOutput=journal+console

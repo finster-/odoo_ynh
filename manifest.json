@@ -34,8 +34,8 @@
       "example": "erp.domain.org"
     }, {
       "name": "version",
-      "choices": ["8", "9", "10", "11", "12"],
-      "default": "12",
+      "choices": ["11", "12", "14"],
+      "default": "14",
       "ask": {
         "en": "Choose the version you want",
         "fr": "Choisissez la version désirée"
