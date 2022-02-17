@@ -40,6 +40,7 @@ ynh_script_progression --message="Backing up the app before upgrading (may take 
 # Backup the current version of the app
 ynh_backup_before_upgrade
 ynh_clean_setup () {
+	ynh_clean_check_starting
 	# Restore it if the upgrade fails
 	ynh_restore_upgradebackup
 }
@@ -67,6 +68,11 @@ if ynh_legacy_permissions_exists; then
 	ynh_app_setting_delete --app=$app --key=is_public
 fi
 
+if ! ynh_permission_exists --permission="admin"; then
+	# Create the required permissions
+	ynh_permission_create --permission="admin" --url="/web/database/manager" --allowed="all_users"
+fi
+
 #=================================================
 # CREATE DEDICATED USER
 #=================================================
@@ -92,16 +98,22 @@ fi
 #=================================================
 ynh_script_progression --message="Upgrading dependencies..."
 
-ynh_install_app_dependencies $pkg_dependencies
+ynh_exec_warn_less ynh_install_app_dependencies $pkg_dependencies
 
 #=================================================
 # SPECIFIC UPGRADE
+#=================================================
+# ADD SWAP
+#=================================================
+ynh_script_progression --message="Adding swap..."
+
+ynh_add_swap --size=$swap_needed
+
 #=================================================
 # BUILD APP
 #=================================================
 ynh_script_progression --message="Building $app..."
 
-ynh_add_swap 1024
 if ! wkhtmltopdf --version | grep "wkhtmltopdf 0.12.4 (with patched qt)"; then
     # The debian package has a bug so we deploy a more recent version
     if [ -f '../manifest.json' ] ; then

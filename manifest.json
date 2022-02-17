@@ -38,6 +38,10 @@
                 "type": "domain"
             },
             {
+                "name": "admin",
+                "type": "user"
+            },
+            {
                 "name": "version",
                 "type": "string",
                 "ask": {
