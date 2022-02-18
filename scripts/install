@@ -1,20 +1,50 @@
 #!/bin/bash
 
-set -eu
+#=================================================
+# GENERIC START
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
 
-source /usr/share/yunohost/helpers
-source _future.sh
 source _common.sh
+source /usr/share/yunohost/helpers
 
+#=================================================
+# MANAGE SCRIPT FAILURE
+#=================================================
+
+ynh_clean_setup () {
+	ynh_clean_check_starting
+}
+# Exit if an error occurs during the execution of the script
 ynh_abort_if_errors
 
-# Arguments from manifest
-export app=$YNH_APP_INSTANCE_NAME
-ynh_export domain oca admin_password lang tz 
+#=================================================
+# RETRIEVE ARGUMENTS FROM THE MANIFEST
+#=================================================
+
+domain=$YNH_APP_ARG_DOMAIN
+path_url="/"
+admin=$YNH_APP_ARG_ADMIN
 export app_version=$YNH_APP_ARG_VERSION
-export is_public=0
-export final_path="/var/www/$app"
+oca=$YNH_APP_ARG_OCA
+admin_password=$YNH_APP_ARG_ADMIN_PASSWORD
+lang=$YNH_APP_ARG_LANG
+tz=$YNH_APP_ARG_TZ
+
+export app=$YNH_APP_INSTANCE_NAME
+
 export conf_file=/etc/$app/main.conf
+export preinstall=0
+
+#=================================================
+# CHECK IF THE APP CAN BE INSTALLED WITH THESE ARGS
+#=================================================
+ynh_script_progression --message="Validating installation parameters..."
+
+export final_path=/var/www/$app
+test ! -e "$final_path" || ynh_die --message="This path already contains a folder"
+
 export bin_file="$final_path/venv/bin/python3 $final_path/$appname/$FORKNAME-bin"
 if [ "$app_version" = "9" ]; then
     bin_file="$final_path/venv/bin/python3 $final_path/$appname/$FORKNAME.py"
@@ -22,79 +52,176 @@ fi
 if [ "$app_version" = "8" ]; then
     bin_file="$final_path/venv/bin/python3 $final_path/$appname/$FORKNAME.py"
 fi
-export db_name=$(ynh_sanitize_dbid $app)
-export port=$(ynh_find_port 8069)
-export port_chat=$(ynh_find_port 8072)
-export preinstall=0
+
+# Register (book) web path
+ynh_webpath_register --app=$app --domain=$domain --path_url=$path_url
 
 #=================================================
-# CHECK IF THE APP CAN BE INSTALLED WITH THIS ARGS
+# STORE SETTINGS FROM MANIFEST
 #=================================================
-test ! -e "$final_path" || ynh_die "This path already contains a folder"
-ynh_webpath_register $app $domain "/"
+ynh_script_progression --message="Storing installation settings..."
 
+ynh_app_setting_set --app=$app --key=domain --value=$domain
+ynh_app_setting_set --app=$app --key=app_version --value=$app_version
+ynh_app_setting_set --app=$app --key=oca --value=$oca
+ynh_app_setting_set --app=$app --key=lang --value=$lang
+ynh_app_setting_set --app=$app --key=tz --value=$tz
+ynh_app_setting_set --app=$app --key=conf_file --value=$conf_file
 
 #=================================================
-# SETUP THE APP BY MODIFYING THE SYSTEM
+# STANDARD MODIFICATIONS
 #=================================================
+# FIND AND OPEN A PORT
+#=================================================
+ynh_script_progression --message="Finding an available port..."
 
-function setup_database() {
-    export preinstall=1
-    ynh_configure server.conf $conf_file
-    chown $app:$app $conf_file
-    # Load translation
-    #param=" --without-demo True --addons-path $final_path/$appname/addons --db_user $app --db_password $db_pass --db_host 127.0.0.1 --db_port 5432 --db-filter '^$app\$' -d $app "
-    param=" -c $conf_file -d $app "
-    sudo -u $app $bin_file -c $conf_file --stop-after-init -i base -d $app
-    sudo -u $app $bin_file -c $conf_file --stop-after-init -i auth_ldap -d $app
-    sudo -u $app $bin_file -c $conf_file --stop-after-init --load-language $lang -d $app
-    # Configure language, timezone and ldap
-    sudo -u $app $bin_file shell -c $conf_file -d $app <<< \
-"
-self.env['res.users'].search([['login', '=', 'admin']])[0].write({'password': '$admin_password'})
-self.env.cr.commit()
-"
-    sudo -u $app $bin_file shell -c $conf_file -d $app <<< \
-"
-self.write({'tz':'$tz','lang':'$lang'})
-self.env.cr.commit()
-"
-    sudo -u $app $bin_file shell -c $conf_file -d $app <<< \
-"
-template=env['res.users'].create({
-  'login':'template',
-  'password':'',
-  'name':'template',
-  'email':'template',
-  'sel_groups_9_10':9,
-  'tz':'$tz',
-  'lang':'$lang'
-})
-self.env.cr.commit()
-self.company_id.ldaps.create({
-  'ldap_server':'localhost',
-  'ldap_server_port':389,
-  'ldap_base':'ou=users, dc=yunohost,dc=org',
-  'ldap_filter':'uid=%s',
-  'user':template.id,
-  'company':self.company_id.id
-})
-self.env.cr.commit()
-"
-    export preinstall=0
-    ynh_configure server.conf $conf_file
-    chown $app:$app $conf_file
-}
-ynh_save_args domain app_version oca lang tz final_path conf_file db_name port port_chat
-ynh_system_user_create -u $app -h $final_path
-export db_pass=$(ynh_string_random)
-setup_files
-install_dependencies
+# Find an available port
+port=$(ynh_find_port --port=8069)
+ynh_app_setting_set --app=$app --key=port --value=$port
+
+# Find an available port
+port_chat=$(ynh_find_port --port=8072)
+ynh_app_setting_set --app=$app --key=port_chat --value=$port_chat
+
+#=================================================
+# INSTALL DEPENDENCIES
+#=================================================
+ynh_script_progression --message="Installing dependencies..."
+
+ynh_exec_warn_less ynh_install_app_dependencies $pkg_dependencies
+
+#=================================================
+# CREATE DEDICATED USER
+#=================================================
+ynh_script_progression --message="Configuring system user..."
+
+# Create a system user
+ynh_system_user_create --username=$app --home_dir="$final_path"
+
+#=================================================
+# CREATE A POSTGRESQL DATABASE
+#=================================================
+ynh_script_progression --message="Creating a PostgreSQL database..."
+
+export db_name=$(ynh_sanitize_dbid --db_name=$app)
+db_user=$db_name
+ynh_app_setting_set --app=$app --key=db_name --value=$db_name
+
+# Make sure that postgresql is installed and running
 ynh_psql_test_if_first_run
-ynh_psql_setup_db $db_name $db_name $db_pass
-export db_pass=$(ynh_app_setting_get $app psqlpwd)
-ynh_configure_nginx
-add_services
-setup_database
-ssowat_and_restart
 
+# Create the database
+ynh_psql_setup_db --db_user=$db_user --db_name=$db_name
+export db_pwd=$(ynh_app_setting_get --app=$app --key=psqlpwd)
+
+# Make sure that its encoding is UTF-8
+ynh_psql_execute_as_root --sql="update pg_database set encoding = pg_char_to_encoding('UTF8') where datname = '$db_name'"
+
+#=================================================
+# DOWNLOAD, CHECK AND UNPACK SOURCE
+#=================================================
+ynh_script_progression --message="Setting up source files..."
+
+ynh_app_setting_set --app=$app --key=final_path --value=$final_path
+# Download, check integrity, uncompress and patch the source from app.src
+setup_files
+
+#=================================================
+# NGINX CONFIGURATION
+#=================================================
+ynh_script_progression --message="Configuring NGINX web server..."
+
+# Create a dedicated NGINX config
+ynh_add_nginx_config
+
+#=================================================
+# SPECIFIC SETUP
+#=================================================
+# ADD SWAP
+#=================================================
+ynh_script_progression --message="Adding swap..."
+
+ynh_add_swap --size=$swap_needed
+
+#=================================================
+# BUILD APP
+#=================================================
+ynh_script_progression --message="Building $app..."
+
+if ! wkhtmltopdf --version | grep "wkhtmltopdf 0.12.4 (with patched qt)"; then
+    # The debian package has a bug so we deploy a more recent version
+    if [ -f '../manifest.json' ] ; then
+        ynh_setup_source /usr/
+    else
+        OLD_YNH_CWD=$YNH_CWD
+        YNH_CWD=$YNH_CWD/../settings/conf
+        ynh_setup_source /usr/
+        YNH_CWD=$OLD_YNH_CWD
+    fi
+fi
+pushd $final_path
+    if grep "python3" $final_path/$appname/$FORKNAME-bin ; then
+        python3 -m venv venv
+        venv/bin/pip3 install wheel
+        venv/bin/pip3 install -r $appname/requirements.txt
+    else
+        virtualenv venv
+        venv/bin/pip install wheel
+        venv/bin/pip install -r $appname/requirements.txt
+    fi
+popd
+
+#=================================================
+# SETUP SYSTEMD
+#=================================================
+ynh_script_progression --message="Configuring a systemd service..."
+
+# Create a dedicated systemd config
+ynh_add_systemd_config
+
+#=================================================
+# SETUP DATABASE
+#=================================================
+ynh_script_progression --message="Setuping the database..."
+
+setup_database
+
+#=================================================
+# GENERIC FINALIZATION
+#=================================================
+# INTEGRATE SERVICE IN YUNOHOST
+#=================================================
+ynh_script_progression --message="Integrating service in YunoHost..."
+
+yunohost service add $app --log="/var/log/$app.log"
+
+#=================================================
+# START SYSTEMD SERVICE
+#=================================================
+ynh_script_progression --message="Starting a systemd service..."
+
+# Start a systemd service
+ynh_systemd_action --service_name=$app --action="start" --log_path="/var/log/$app.log"
+
+#=================================================
+# SETUP SSOWAT
+#=================================================
+ynh_script_progression --message="Configuring permissions..."
+
+ynh_permission_update --permission="main" --add="visitors"
+
+# Only the admin can access the admin panel of the app (if the app has an admin panel)
+ynh_permission_create --permission="admin" --url="/web/database/manager" --allowed="all_users"
+
+#=================================================
+# RELOAD NGINX
+#=================================================
+ynh_script_progression --message="Reloading NGINX web server..."
+
+ynh_systemd_action --service_name=nginx --action=reload
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression --message="Installation of $app completed"

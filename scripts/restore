@@ -1,24 +1,43 @@
 #!/bin/bash
-set -eu
 
-# Import helpers
-source /usr/share/yunohost/helpers
-source ../settings/scripts/_future.sh
+#=================================================
+# GENERIC START
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
+
+# Keep this path for calling _common.sh inside the execution's context of backup and restore scripts
 source ../settings/scripts/_common.sh
+source /usr/share/yunohost/helpers
 
+#=================================================
+# MANAGE SCRIPT FAILURE
+#=================================================
+
+ynh_clean_setup () {
+	ynh_clean_check_starting
+}
+# Exit if an error occurs during the execution of the script
 ynh_abort_if_errors
 
+#=================================================
+# LOAD SETTINGS
+#=================================================
+ynh_script_progression --message="Loading installation settings..."
+
 export app=$YNH_APP_INSTANCE_NAME
-export domain=$(ynh_app_setting_get $app domain)
-export app_version=$(ynh_app_setting_get $app app_version)
-export oca=$(ynh_app_setting_get $app oca)
-export port=$(ynh_app_setting_get $app port)
-export port_chat=$(ynh_app_setting_get $app port_chat)
-export db_name=$(ynh_app_setting_get $app db_name)
-export db_pass=$(ynh_app_setting_get $app psqlpwd)
-export final_path=$(ynh_app_setting_get $app final_path)
-export conf_file=$(ynh_app_setting_get $app conf_file)
-export is_public=0
+
+export domain=$(ynh_app_setting_get --app=$app --key=domain)
+path_url=$(ynh_app_setting_get --app=$app --key=path)
+export app_version=$(ynh_app_setting_get --app=$app --key=app_version)
+export oca=$(ynh_app_setting_get --app=$app --key=oca)
+export port=$(ynh_app_setting_get --app=$app --key=port)
+export port_chat=$(ynh_app_setting_get --app=$app --key=port_chat)
+export db_name=$(ynh_app_setting_get --app=$app --key=db_name)
+db_user=$db_name
+export db_pwd=$(ynh_app_setting_get --app=$app --key=psqlpwd)
+export final_path=$(ynh_app_setting_get --app=$app --key=final_path)
+export conf_file=$(ynh_app_setting_get --app=$app --key=conf_file)
 export bin_file="$final_path/venv/bin/python $final_path/$appname/$FORKNAME-bin"
 if [ "$app_version" = "9" ]; then
     bin_file="$final_path/venv/bin/python $final_path/$appname/$FORKNAME.py"
@@ -31,33 +50,148 @@ export preinstall=0
 #=================================================
 # CHECK IF THE APP CAN BE RESTORED
 #=================================================
-ynh_webpath_available "$domain" "/"
+ynh_script_progression --message="Validating restoration parameters..."
+
+test ! -d $final_path \
+	|| ynh_die --message="There is already a directory: $final_path "
 
 #=================================================
-# RESTORE THE APP BY MODIFYING THE SYSTEM
+# STANDARD RESTORATION STEPS
 #=================================================
-# Restore files
-function restore_files () {
-    ynh_restore
-    chown -R $app:$app $final_path
-    chown $app:$app $conf_file
-    touch /var/log/$app.log
-    chown $app:$app /var/log/$app.log
-}
+# RESTORE THE NGINX CONFIGURATION
+#=================================================
+ynh_script_progression --message="Restoring the NGINX web server configuration..."
 
-# Restore database
-function restore_database () {
-    su -c "psql $app" postgres < ./dump.sql
-}
+ynh_restore_file --origin_path="/etc/nginx/conf.d/$domain.d/$app.conf"
 
-ynh_system_user_create $app $final_path
-restore_files
-install_dependencies
+#=================================================
+# RECREATE THE DEDICATED USER
+#=================================================
+ynh_script_progression --message="Recreating the dedicated system user..."
+
+# Create the dedicated user (if not existing)
+ynh_system_user_create --username=$app --home_dir="$final_path"
+
+#=================================================
+# RESTORE THE APP MAIN DIR
+#=================================================
+ynh_script_progression --message="Restoring the app main directory..."
+
+ynh_restore_file --origin_path="$final_path/$appname"
+ynh_restore_file --origin_path="$final_path/custom-addons"
+ynh_restore_file --origin_path="$final_path/.local"
+
+chmod 750 "$final_path"
+chmod -R o-rwx "$final_path"
+chown -R $app:$app "$final_path"
+
+#=================================================
+# SPECIFIC RESTORATION
+#=================================================
+# REINSTALL DEPENDENCIES
+#=================================================
+ynh_script_progression --message="Reinstalling dependencies..."
+
+# Define and install dependencies
+ynh_exec_warn_less ynh_install_app_dependencies $pkg_dependencies
+
+#=================================================
+# ADD SWAP
+#=================================================
+ynh_script_progression --message="Adding swap..."
+
+ynh_add_swap --size=$swap_needed
+
+#=================================================
+# BUILD APP
+#=================================================
+ynh_script_progression --message="Building $app..."
+
+if ! wkhtmltopdf --version | grep "wkhtmltopdf 0.12.4 (with patched qt)"; then
+    # The debian package has a bug so we deploy a more recent version
+    if [ -f '../manifest.json' ] ; then
+        ynh_setup_source /usr/
+    else
+        OLD_YNH_CWD=$YNH_CWD
+        YNH_CWD=$YNH_CWD/../settings/conf
+        ynh_setup_source /usr/
+        YNH_CWD=$OLD_YNH_CWD
+    fi
+fi
+pushd $final_path
+    if grep "python3" $final_path/$appname/$FORKNAME-bin ; then
+        python3 -m venv venv
+        venv/bin/pip3 install wheel
+        venv/bin/pip3 install -r $appname/requirements.txt
+    else
+        virtualenv venv
+        venv/bin/pip install wheel
+        venv/bin/pip install -r $appname/requirements.txt
+    fi
+popd
+
+#=================================================
+# RESTORE THE POSTGRESQL DATABASE
+#=================================================
+ynh_script_progression --message="Restoring the PostgreSQL database..."
+
+# Make sure that postgresql is installed and running
 ynh_psql_test_if_first_run
-ynh_psql_setup_db $db_name $db_name $db_pass
-add_services
-restore_database
-ssowat_and_restart
 
+# Create the database
+ynh_psql_setup_db --db_user=$db_user --db_name=$db_name --db_pwd=$db_pwd
 
+# Make sure that its encoding is UTF-8
+ynh_psql_execute_as_root --sql="update pg_database set encoding = pg_char_to_encoding('UTF8') where datname = '$db_name'"
 
+# Restore the database contents
+ynh_psql_connect_as --user=$db_user --password=$db_pwd --database=$db_name < ./db.sql
+
+#=================================================
+# RESTORE VARIOUS FILES
+#=================================================
+ynh_script_progression --message="Restoring various files..."
+
+ynh_restore_file --origin_path="$conf_file"
+chmod 400 "$conf_file"
+chown $app:$app "$conf_file"
+
+touch /var/log/$app.log
+chown $app:$app /var/log/$app.log
+
+#=================================================
+# RESTORE SYSTEMD
+#=================================================
+ynh_script_progression --message="Restoring the systemd configuration..."
+
+ynh_restore_file --origin_path="/etc/systemd/system/$app.service"
+systemctl enable $app.service --quiet
+
+#=================================================
+# INTEGRATE SERVICE IN YUNOHOST
+#=================================================
+ynh_script_progression --message="Integrating service in YunoHost..."
+
+yunohost service add $app --log="/var/log/$app.log"
+
+#=================================================
+# START SYSTEMD SERVICE
+#=================================================
+ynh_script_progression --message="Starting a systemd service..."
+
+ynh_systemd_action --service_name=$app --action="start" --log_path="/var/log/$app.log"
+
+#=================================================
+# GENERIC FINALIZATION
+#=================================================
+# RELOAD NGINX
+#=================================================
+ynh_script_progression --message="Reloading NGINX web server..."
+
+ynh_systemd_action --service_name=nginx --action=reload
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression --message="Restoration completed for $app"
